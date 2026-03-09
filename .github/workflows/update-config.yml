@@ -1,0 +1,66 @@
+name: Update OpenCode config
+
+on:
+  # Run daily at 06:00 UTC
+  schedule:
+    - cron: '0 6 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+  # Trigger when litellm config changes in core-llm-gateway
+  repository_dispatch:
+    types: [litellm-config-updated]
+
+permissions:
+  contents: write
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Checkout core-llm-gateway (litellm config)
+        uses: actions/checkout@v4
+        with:
+          repository: i-dot-ai/core-llm-gateway
+          path: core-llm-gateway
+          token: ${{ secrets.GH_PAT }}
+          sparse-checkout: backend/config/config.yml
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate opencode.json
+        run: |
+          python generate.py \
+            --litellm-config core-llm-gateway/backend/config/config.yml \
+            --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
+            --output opencode.json
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet opencode.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add opencode.json
+          git commit -m "Update opencode.json from litellm config
+
+          Auto-generated from core-llm-gateway/backend/config/config.yml
+          with model metadata from models.dev"
+          git push

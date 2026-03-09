@@ -1,0 +1,748 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM",
+      "options": {
+        "baseURL": "https://llm-gateway.i.ai.gov.uk/v1"
+      },
+      "models": {
+        "locai-l1": {
+          "name": "locai-l1"
+        },
+        "o4-mini-sweden": {
+          "name": "o4-mini-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 100000
+          },
+          "cost": {
+            "input": 1.1,
+            "output": 4.4,
+            "cache_read": 0.28
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4o-mini-sweden": {
+          "name": "gpt-4o-mini-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 0.15,
+            "output": 0.6,
+            "cache_read": 0.08
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4o-sweden": {
+          "name": "gpt-4o-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 2.5,
+            "output": 10,
+            "cache_read": 1.25
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4o-uk": {
+          "name": "gpt-4o-uk",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 2.5,
+            "output": 10,
+            "cache_read": 1.25
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4o-2024-08-06-sweden": {
+          "name": "gpt-4o-2024-08-06-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 2.5,
+            "output": 10,
+            "cache_read": 1.25
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4.1": {
+          "name": "gpt-4.1",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1047576,
+            "output": 32768
+          },
+          "cost": {
+            "input": 2,
+            "output": 8,
+            "cache_read": 0.5
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4.1-sweden-2025-03": {
+          "name": "gpt-4.1-sweden-2025-03",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1047576,
+            "output": 32768
+          },
+          "cost": {
+            "input": 2,
+            "output": 8,
+            "cache_read": 0.5
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4.1-mini": {
+          "name": "gpt-4.1-mini",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1047576,
+            "output": 32768
+          },
+          "cost": {
+            "input": 0.4,
+            "output": 1.6,
+            "cache_read": 0.1
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-4.1-nano": {
+          "name": "gpt-4.1-nano",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1047576,
+            "output": 32768
+          },
+          "cost": {
+            "input": 0.1,
+            "output": 0.4,
+            "cache_read": 0.03
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5-mini": {
+          "name": "gpt-5-mini",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.25,
+            "output": 2,
+            "cache_read": 0.03
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5-chat": {
+          "name": "gpt-5-chat",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cache_read": 0.13
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": false,
+          "attachment": true
+        },
+        "gpt-5-nano": {
+          "name": "gpt-5-nano",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.05,
+            "output": 0.4,
+            "cache_read": 0.01
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5": {
+          "name": "gpt-5",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cache_read": 0.13
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.2-sweden": {
+          "name": "gpt-5.2-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 400000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 1.75,
+            "output": 14,
+            "cache_read": 0.125
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.2-chat-sweden": {
+          "name": "gpt-5.2-chat-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 1.75,
+            "output": 14,
+            "cache_read": 0.175
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.2-codex-sweden": {
+          "name": "gpt-5.2-codex-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 400000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 1.75,
+            "output": 14,
+            "cache_read": 0.175
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": false
+        },
+        "bedrock-claude-4.6-opus": {
+          "name": "bedrock-claude-4.6-opus",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 5,
+            "output": 25,
+            "cache_read": 0.5,
+            "cache_write": 6.25
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "bedrock-claude-4.6-sonnet": {
+          "name": "bedrock-claude-4.6-sonnet",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "cost": {
+            "input": 3,
+            "output": 15,
+            "cache_read": 0.3,
+            "cache_write": 3.75
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "bedrock-claude-4.5-opus": {
+          "name": "bedrock-claude-4.5-opus",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "cost": {
+            "input": 5,
+            "output": 25,
+            "cache_read": 0.5,
+            "cache_write": 6.25
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "bedrock-claude-4.5-sonnet": {
+          "name": "bedrock-claude-4.5-sonnet",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "cost": {
+            "input": 3,
+            "output": 15,
+            "cache_read": 0.3,
+            "cache_write": 3.75
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "bedrock-claude-4.5-haiku": {
+          "name": "bedrock-claude-4.5-haiku",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 64000
+          },
+          "cost": {
+            "input": 1,
+            "output": 5,
+            "cache_read": 0.1,
+            "cache_write": 1.25
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "bedrock-claude-3-7-sonnet": {
+          "name": "bedrock-claude-3-7-sonnet",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 200000,
+            "output": 8192
+          },
+          "cost": {
+            "input": 3,
+            "output": 15,
+            "cache_read": 0.3,
+            "cache_write": 3.75
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-2-flash-eu": {
+          "name": "gemini-2-flash-eu",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio",
+              "video",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 8192
+          },
+          "cost": {
+            "input": 0.15,
+            "output": 0.6,
+            "cache_read": 0.025
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-2.5-flash-uk": {
+          "name": "gemini-2.5-flash-uk",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio",
+              "video",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 0.3,
+            "output": 2.5,
+            "cache_read": 0.075,
+            "cache_write": 0.383
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-2.5-pro-eu": {
+          "name": "gemini-2.5-pro-eu",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio",
+              "video",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cache_read": 0.31
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-3-pro-preview-global": {
+          "name": "gemini-3-pro-preview-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 2,
+            "output": 12,
+            "cache_read": 0.2
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-3-flash-preview-global": {
+          "name": "gemini-3-flash-preview-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 0.5,
+            "output": 3,
+            "cache_read": 0.05
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-3.1-pro-preview-global": {
+          "name": "gemini-3.1-pro-preview-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 2,
+            "output": 12,
+            "cache_read": 0.2
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        }
+      }
+    }
+  }
+}
