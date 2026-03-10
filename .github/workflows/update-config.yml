@@ -21,13 +21,22 @@ jobs:
       - name: Checkout this repo
         uses: actions/checkout@v4
 
-      - name: Checkout core-llm-gateway (litellm config)
-        uses: actions/checkout@v4
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
         with:
-          repository: i-dot-ai/core-llm-gateway
-          path: core-llm-gateway
-          token: ${{ secrets.GH_PAT }}
-          sparse-checkout: backend/config/config.yml
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: i-dot-ai
+          repositories: core-llm-gateway
+
+      - name: Fetch litellm config from core-llm-gateway
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api repos/i-dot-ai/core-llm-gateway/contents/backend/config/config.yml \
+            -H "Accept: application/vnd.github.raw+json" \
+            > litellm-config.yml
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,7 +49,7 @@ jobs:
       - name: Generate opencode.json
         run: |
           python generate.py \
-            --litellm-config core-llm-gateway/backend/config/config.yml \
+            --litellm-config litellm-config.yml \
             --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
             --output opencode.json
 
