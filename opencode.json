@@ -623,6 +623,147 @@
           "tool_call": true,
           "attachment": true
         },
+        "bedrock-magistral-small-uk": {
+          "name": "bedrock-magistral-small-uk",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 40000
+          },
+          "cost": {
+            "input": 0.5,
+            "output": 1.5
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": false
+        },
+        "bedrock-devstral-2-123b-uk": {
+          "name": "bedrock-devstral-2-123b-uk",
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 256000,
+            "output": 8192
+          },
+          "cost": {
+            "input": 0.4,
+            "output": 2
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": false
+        },
+        "bedrock-ministral-14b-uk": {
+          "name": "bedrock-ministral-14b-uk",
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "cost": {
+            "input": 0.2,
+            "output": 0.2
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": false
+        },
+        "bedrock-ministral-8b-uk": {
+          "name": "bedrock-ministral-8b-uk",
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 4096
+          },
+          "cost": {
+            "input": 0.15,
+            "output": 0.15
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": false
+        },
+        "bedrock-ministral-3b-uk": {
+          "name": "bedrock-ministral-3b-uk",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 256000,
+            "output": 8192
+          },
+          "cost": {
+            "input": 0.1,
+            "output": 0.1
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": false
+        },
+        "bedrock-pixtral-large-eu": {
+          "name": "bedrock-pixtral-large-eu",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 8192
+          },
+          "cost": {
+            "input": 2,
+            "output": 6
+          },
+          "reasoning": false,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": false
+        },
         "gemini-2-flash-eu": {
           "name": "gemini-2-flash-eu",
           "modalities": {
