@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-Generate opencode.json from a litellm config.yml and models.dev metadata.
+Generate opencode.json and claude-settings.json from a litellm config.yml and models.dev metadata.
 
 This script:
 1. Reads the litellm proxy config.yml to get model aliases and their underlying models
 2. Fetches model metadata from models.dev (capabilities, costs, limits, etc.)
 3. Maps litellm provider prefixes to models.dev provider IDs
 4. Generates an opencode.json with full model metadata
+5. Generates a claude-settings.json for Claude Code with Bedrock pass-through config
 
 Usage:
     python generate.py --litellm-config path/to/config.yml --base-url https://llm-gateway.example.com/v1
     python generate.py --litellm-config path/to/config.yml --base-url https://llm-gateway.example.com/v1 --output opencode.json
+    python generate.py --litellm-config path/to/config.yml --base-url https://llm-gateway.example.com/v1 --output opencode.json --claude-output claude-settings.json
 """
 
 from __future__ import annotations
@@ -19,6 +21,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+import re
 from typing import Dict, List, Optional, Tuple
 from urllib.request import urlopen, Request
 
@@ -231,9 +234,122 @@ def generate_opencode_config(
     }
 
 
+def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]:
+    """
+    Auto-detect the best opus, sonnet, and haiku models from the litellm config.
+
+    Looks for bedrock Claude models by matching model_name patterns.
+    For each tier (opus/sonnet/haiku), picks the model with the highest
+    version number.
+
+    Returns a dict with keys 'opus', 'sonnet', 'haiku' mapped to model_name
+    strings (or None if not found).
+    """
+    # Collect candidates: (model_name, version_tuple) for each tier
+    candidates: dict[str, list[tuple[str, tuple[float, ...]]]] = {
+        "opus": [],
+        "sonnet": [],
+        "haiku": [],
+    }
+
+    for entry in litellm_models:
+        model_name = entry.get("model_name", "")
+        litellm_params = entry.get("litellm_params", {})
+        litellm_model = litellm_params.get("model", "")
+
+        # Only consider bedrock Claude models
+        if not litellm_model.startswith("bedrock/"):
+            continue
+        underlying = litellm_model.split("/", 1)[1].lower()
+        if "anthropic" not in underlying and "claude" not in underlying:
+            continue
+
+        name_lower = model_name.lower()
+
+        # Determine tier
+        tier = None
+        for t in ("opus", "sonnet", "haiku"):
+            if t in name_lower:
+                tier = t
+                break
+        if tier is None:
+            continue
+
+        # Extract version numbers from the model name for sorting
+        # e.g. "bedrock-claude-4.6-opus" -> (4, 6)
+        # e.g. "bedrock-claude-4.5-sonnet" -> (4, 5)
+        version_numbers = re.findall(r"(\d+(?:\.\d+)?)", model_name)
+        version_tuple = (
+            tuple(float(v) for v in version_numbers) if version_numbers else (0,)
+        )
+
+        candidates[tier].append((model_name, version_tuple))
+
+    # Pick the highest version for each tier
+    result: dict[str, Optional[str]] = {}
+    for tier in ("opus", "sonnet", "haiku"):
+        if candidates[tier]:
+            # Sort by version tuple descending, pick the first
+            best = sorted(candidates[tier], key=lambda x: x[1], reverse=True)[0]
+            result[tier] = best[0]
+            print(f"  Claude Code {tier}: {best[0]}", file=sys.stderr)
+        else:
+            result[tier] = None
+            print(f"  Claude Code {tier}: not found", file=sys.stderr)
+
+    return result
+
+
+def generate_claude_settings(
+    base_url: str,
+    litellm_models: list[dict],
+) -> dict:
+    """
+    Generate a claude-settings.json for Claude Code with Bedrock pass-through.
+
+    The settings configure Claude Code to route through LiteLLM's /bedrock
+    endpoint, skipping local AWS auth (LiteLLM handles it).
+
+    API key (ANTHROPIC_AUTH_TOKEN) is NOT included -- users should set it
+    in their shell profile so it persists across config regenerations.
+    """
+    # Derive bedrock URL from base URL: strip /v1 suffix and append /bedrock
+    bedrock_url = re.sub(r"/v1/?$", "", base_url) + "/bedrock"
+
+    print("\nDetecting Claude models for Claude Code settings...", file=sys.stderr)
+    claude_models = detect_claude_models(litellm_models)
+
+    env: dict[str, str] = {
+        "ANTHROPIC_BEDROCK_BASE_URL": bedrock_url,
+        "CLAUDE_CODE_USE_BEDROCK": "1",
+        "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
+    }
+
+    # Add model pinning for each tier found
+    model_env_map = {
+        "opus": "ANTHROPIC_DEFAULT_OPUS_MODEL",
+        "sonnet": "ANTHROPIC_DEFAULT_SONNET_MODEL",
+        "haiku": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
+    }
+
+    for tier, env_var in model_env_map.items():
+        model_name = claude_models.get(tier)
+        if model_name is not None:
+            env[env_var] = model_name
+
+    result: dict = {"env": env}
+
+    # Set the default model to the best opus, falling back to sonnet
+    default_model = claude_models.get("opus") or claude_models.get("sonnet")
+    if default_model is not None:
+        result["model"] = default_model
+
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate opencode.json from litellm config and models.dev"
+        description="Generate opencode.json and claude-settings.json from litellm config and models.dev"
     )
     parser.add_argument(
         "--litellm-config",
@@ -258,7 +374,12 @@ def main():
     parser.add_argument(
         "--output",
         default=None,
-        help="Output file path (default: stdout)",
+        help="Output file path for opencode.json (default: stdout)",
+    )
+    parser.add_argument(
+        "--claude-output",
+        default=None,
+        help="Output file path for claude-settings.json (default: not generated)",
     )
 
     args = parser.parse_args()
@@ -277,6 +398,17 @@ def main():
         print(f"Written to {args.output}", file=sys.stderr)
     else:
         print(output)
+
+    # Generate Claude Code settings if requested
+    if args.claude_output:
+        litellm_models = parse_litellm_config(args.litellm_config)
+        claude_settings = generate_claude_settings(
+            base_url=args.base_url,
+            litellm_models=litellm_models,
+        )
+        claude_output = json.dumps(claude_settings, indent=2) + "\n"
+        Path(args.claude_output).write_text(claude_output)
+        print(f"Written Claude Code settings to {args.claude_output}", file=sys.stderr)
 
 
 if __name__ == "__main__":
