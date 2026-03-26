@@ -46,20 +46,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Generate opencode.json
+      - name: Generate opencode.json and claude-settings.json
         run: |
           python generate.py \
             --litellm-config litellm-config.yml \
             --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
-            --output opencode.json
+            --output opencode.json \
+            --claude-output claude-settings.json
 
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet opencode.json; then
+          git add opencode.json claude-settings.json
+          if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
+            git reset HEAD -- opencode.json claude-settings.json
           fi
 
       - name: Commit and push
@@ -67,8 +70,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add opencode.json
-          git commit -m "Update opencode.json from litellm config
+          git add opencode.json claude-settings.json
+          git commit -m "Update configs from litellm config
 
           Auto-generated from core-llm-gateway/backend/config/config.yml
           with model metadata from models.dev"
