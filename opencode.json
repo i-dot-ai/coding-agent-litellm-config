@@ -286,6 +286,31 @@
           "tool_call": false,
           "attachment": true
         },
+        "gpt-5-chat-us-east2": {
+          "name": "gpt-5-chat-us-east2",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cache_read": 0.13
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": false,
+          "attachment": true
+        },
         "gpt-5-nano": {
           "name": "gpt-5-nano",
           "modalities": {
@@ -330,6 +355,62 @@
             "input": 1.25,
             "output": 10,
             "cache_read": 0.13
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.1-sweden": {
+          "name": "gpt-5.1-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio"
+            ],
+            "output": [
+              "text",
+              "image",
+              "audio"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cache_read": 0.125
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.1-us-east2": {
+          "name": "gpt-5.1-us-east2",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "audio"
+            ],
+            "output": [
+              "text",
+              "image",
+              "audio"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 1.25,
+            "output": 10,
+            "cache_read": 0.125
           },
           "reasoning": true,
           "temperature": false,
@@ -436,8 +517,159 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-5.2-codex-sweden": {
-          "name": "gpt-5.2-codex-sweden",
+        "gpt-5.2-chat-us-east2": {
+          "name": "gpt-5.2-chat-us-east2",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 128000,
+            "output": 16384
+          },
+          "cost": {
+            "input": 1.75,
+            "output": 14,
+            "cache_read": 0.175
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.4-sweden": {
+          "name": "gpt-5.4-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 400000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 2.5,
+            "output": 15,
+            "cache_read": 0.25
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5-nano-us-east": {
+          "name": "gpt-5-nano-us-east",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.05,
+            "output": 0.4,
+            "cache_read": 0.01
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5-nano-us-east2": {
+          "name": "gpt-5-nano-us-east2",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.05,
+            "output": 0.4,
+            "cache_read": 0.01
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5-mini-us-east": {
+          "name": "gpt-5-mini-us-east",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.25,
+            "output": 2,
+            "cache_read": 0.03
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5-mini-us-east2": {
+          "name": "gpt-5-mini-us-east2",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 272000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.25,
+            "output": 2,
+            "cache_read": 0.03
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.2-us-east2": {
+          "name": "gpt-5.2-us-east2",
           "modalities": {
             "input": [
               "text",
@@ -454,12 +686,12 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.175
+            "cache_read": 0.125
           },
           "reasoning": true,
           "temperature": false,
           "tool_call": true,
-          "attachment": false
+          "attachment": true
         },
         "bedrock-claude-4.6-opus": {
           "name": "bedrock-claude-4.6-opus",
