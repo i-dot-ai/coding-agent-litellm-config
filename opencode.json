@@ -568,6 +568,58 @@
           "tool_call": true,
           "attachment": true
         },
+        "gpt-5.4-mini-sweden": {
+          "name": "gpt-5.4-mini-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 400000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.75,
+            "output": 4.5,
+            "cache_read": 0.075
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.4-nano-sweden": {
+          "name": "gpt-5.4-nano-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 400000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.2,
+            "output": 1.25,
+            "cache_read": 0.02
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
         "gpt-5-nano-us-east": {
           "name": "gpt-5-nano-us-east",
           "modalities": {
@@ -1164,6 +1216,9 @@
           "temperature": true,
           "tool_call": true,
           "attachment": true
+        },
+        "gemini-3.1-flash-lite-preview-global": {
+          "name": "gemini-3.1-flash-lite-preview-global"
         }
       }
     }
