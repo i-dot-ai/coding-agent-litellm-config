@@ -3,9 +3,9 @@
     "ANTHROPIC_BEDROCK_BASE_URL": "https://llm-gateway.i.ai.gov.uk/bedrock",
     "CLAUDE_CODE_USE_BEDROCK": "1",
     "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-4.6-opus",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-4.7-opus",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-4.6-sonnet",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-4.5-haiku"
   },
-  "model": "bedrock-claude-4.6-opus"
+  "model": "bedrock-claude-4.7-opus"
 }

@@ -745,6 +745,33 @@
           "tool_call": true,
           "attachment": true
         },
+        "bedrock-claude-4.7-opus": {
+          "name": "bedrock-claude-4.7-opus",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 5,
+            "output": 25,
+            "cache_read": 0.5,
+            "cache_write": 6.25
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
         "bedrock-claude-4.6-opus": {
           "name": "bedrock-claude-4.6-opus",
           "modalities": {
