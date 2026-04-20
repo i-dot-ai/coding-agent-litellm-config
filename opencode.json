@@ -1153,7 +1153,7 @@
           "cost": {
             "input": 1.25,
             "output": 10,
-            "cache_read": 0.31
+            "cache_read": 0.125
           },
           "reasoning": true,
           "temperature": true,
