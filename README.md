@@ -38,23 +38,34 @@ ln -sf $(pwd)/opencode.json ~/.config/opencode/opencode.json
 
 The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through. It auto-detects the latest opus, sonnet, and haiku models from the LiteLLM config.
 
-#### Install with auto-update
+#### Install (works before or after installing Claude Code)
 
 ```bash
+git clone git@github.com:i-dot-ai/coding-agent-litellm-config.git
+cd coding-agent-litellm-config
 ./install.sh
 ```
 
 This does two things:
-1. Deep-merges `claude-settings.json` into `~/.claude/settings.json` (preserving your existing hooks, plugins, and extra env vars like API keys)
-2. Registers a `SessionStart` hook so Claude Code auto-pulls updates on session start (throttled to once per hour, runs in background)
+1. Deep-merges `claude-settings.json` into `~/.claude/settings.json` (creating it if it doesn't exist, preserving your existing hooks, plugins, and extra env vars like API keys if it does)
+2. Registers a `SessionStart` hook so Claude Code auto-pulls updates when a new session starts (throttled to once per hour, runs in background)
 
-Set your LiteLLM API key in your shell profile (`~/.zshrc` or `~/.bash_profile`):
+The install works from any branch — if `claude-settings.json` doesn't exist locally, it reads it from `origin/main`.
+
+Then set your LiteLLM API key in your shell profile (`~/.zshrc` or `~/.bash_profile`):
 
 ```bash
 export ANTHROPIC_AUTH_TOKEN=sk-your-litellm-key
 ```
 
 The API key is intentionally **not** included in `claude-settings.json` so it doesn't get overwritten when the config is regenerated.
+
+Now install and run Claude Code:
+
+```bash
+npm install -g @anthropic-ai/claude-code
+claude
+```
 
 #### Uninstall
 
@@ -103,7 +114,7 @@ python generate.py \
 
 **Server-side:** A GitHub Action runs daily and whenever the litellm config changes, regenerating both `opencode.json` and `claude-settings.json` and committing any updates.
 
-**Client-side:** If you ran `./install.sh`, Claude Code will `git pull` this repo on session start (background, throttled to once/hour) and merge any changes into `~/.claude/settings.json`.
+**Client-side:** If you ran `./install.sh`, Claude Code will fetch `origin/main` on new session start (background, throttled to once/hour) and merge any changes into `~/.claude/settings.json`. This works regardless of which branch is checked out locally.
 
 To trigger from `core-llm-gateway` when the config changes, add a dispatch step to the gateway's CI:
 

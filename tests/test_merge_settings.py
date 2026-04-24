@@ -347,6 +347,7 @@ class TestHookManagement(unittest.TestCase):
             hooks = settings["hooks"]["SessionStart"]
             self.assertEqual(len(hooks), 1)
             self.assertIn("update-claude-settings.sh", hooks[0]["hooks"][0]["command"])
+            self.assertEqual(hooks[0].get("matcher"), "startup")
 
     def test_install_hook_uses_absolute_path(self):
         """Hook command must contain the exact path passed in (#8)."""

@@ -48,7 +48,8 @@ def add_hook(settings: dict, hook_cmd: str) -> dict:
         if not any(HOOK_MARKER in h.get("command", "") for h in entry.get("hooks", []))
     ]
     filtered.append({
-        "hooks": [{"type": "command", "command": hook_cmd}]
+        "matcher": "startup",
+        "hooks": [{"type": "command", "command": hook_cmd}],
     })
     result["hooks"]["SessionStart"] = filtered
     return result

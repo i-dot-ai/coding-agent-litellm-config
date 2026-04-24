@@ -63,11 +63,19 @@ def count_update_hooks(settings: dict) -> int:
     return count
 
 
-def get_hook_command(settings: dict) -> str:
+def get_hook_entry(settings: dict) -> dict:
     for entry in settings.get("hooks", {}).get("SessionStart", []):
         for hook in entry.get("hooks", []):
             if HOOK_MARKER in hook.get("command", ""):
-                return hook["command"]
+                return entry
+    return {}
+
+
+def get_hook_command(settings: dict) -> str:
+    entry = get_hook_entry(settings)
+    for hook in entry.get("hooks", []):
+        if HOOK_MARKER in hook.get("command", ""):
+            return hook["command"]
     return ""
 
 
@@ -100,6 +108,14 @@ class TestInstall(unittest.TestCase):
         settings = load_settings(self.settings_path)
         cmd = get_hook_command(settings)
         self.assertTrue(cmd.startswith("/"), f"Hook command must be absolute, got: {cmd}")
+
+    def test_install_hook_has_startup_matcher(self):
+        """Hook should only fire on new sessions, not resume/clear/compact."""
+        result = run_install(self.settings_path, self.state_dir, self.generated_path)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        settings = load_settings(self.settings_path)
+        entry = get_hook_entry(settings)
+        self.assertEqual(entry.get("matcher"), "startup")
 
     def test_install_adds_hook_with_existing_other_hooks(self):
         with open(self.settings_path, "w") as f:
