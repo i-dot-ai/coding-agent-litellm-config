@@ -28,6 +28,11 @@ done
   export GIT_TERMINAL_PROMPT=0
   mkdir -p "$STATE_DIR"
 
+  # Pause file: skip updates entirely when present (unless --force)
+  if [ "$FORCE" -eq 0 ] && [ -f "${STATE_DIR}/paused" ]; then
+    exit 0
+  fi
+
   # Throttle: skip if checked recently (unless --force)
   if [ "$FORCE" -eq 0 ] && [ -f "$THROTTLE_FILE" ]; then
     LAST=$(cat "$THROTTLE_FILE" 2>/dev/null || echo 0)
@@ -77,6 +82,10 @@ done
     # Extract the file from origin/main and merge it
     TMPFILE="${STATE_DIR}/.claude-settings-latest.json"
     if git -C "$REPO_DIR" show "origin/main:$BASENAME" > "$TMPFILE" 2>/dev/null; then
+      # Backup current settings before merging
+      if [ -f "$SETTINGS_FILE" ]; then
+        cp "$SETTINGS_FILE" "${STATE_DIR}/settings.json.backup" 2>/dev/null
+      fi
       python3 "$MERGE_SCRIPT" "$TMPFILE" "$SETTINGS_FILE" --only-if-changed 2>/dev/null
       rm -f "$TMPFILE" 2>/dev/null
     fi

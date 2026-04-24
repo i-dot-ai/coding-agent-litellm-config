@@ -62,6 +62,21 @@ npm install -g @anthropic-ai/claude-code
 claude
 ```
 
+#### Rollback and pause
+
+A backup of your settings is saved before each auto-update to `~/.config/coding-agent-litellm-config/settings.json.backup`.
+
+To restore and pause auto-updates:
+```bash
+cp ~/.config/coding-agent-litellm-config/settings.json.backup ~/.claude/settings.json
+touch ~/.config/coding-agent-litellm-config/paused
+```
+
+To resume auto-updates:
+```bash
+rm ~/.config/coding-agent-litellm-config/paused
+```
+
 #### Uninstall
 
 ```bash

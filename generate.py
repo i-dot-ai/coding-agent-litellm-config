@@ -300,6 +300,33 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
     return result
 
 
+def normalize_claude_model_name(name: str) -> str:
+    """Rewrite LiteLLM aliases so Claude Code's model-name normalizer can parse them.
+
+    Claude Code matches patterns like 'claude-opus-4-7' (tier before version,
+    dashes only).  LiteLLM aliases may use either old-style 'bedrock-claude-4.7-opus'
+    (version before tier, dots) or new-style 'bedrock-claude-opus-4-7-eu'
+    (tier before version, dashes, optional region suffix).  Both are converted to
+    the canonical form without region suffix for Claude Code settings.
+    """
+    # Old style: bedrock-claude-4.7-opus → bedrock-claude-opus-4-7
+    m = re.match(
+        r"^(bedrock-claude-)(\d+)\.(\d+)-(opus|sonnet|haiku)$", name
+    )
+    if m:
+        prefix, major, minor, tier = m.groups()
+        return f"{prefix}{tier}-{major}-{minor}"
+
+    # New style with region suffix: bedrock-claude-opus-4-7-eu → bedrock-claude-opus-4-7
+    m = re.match(
+        r"^(bedrock-claude-(?:opus|sonnet|haiku)-\d+-\d+)-[a-z]+$", name
+    )
+    if m:
+        return m.group(1)
+
+    return name
+
+
 def generate_claude_settings(
     base_url: str,
     litellm_models: list[dict],
@@ -335,14 +362,14 @@ def generate_claude_settings(
     for tier, env_var in model_env_map.items():
         model_name = claude_models.get(tier)
         if model_name is not None:
-            env[env_var] = model_name
+            env[env_var] = normalize_claude_model_name(model_name)
 
     result: dict = {"env": env}
 
     # Set the default model to the best opus, falling back to sonnet
     default_model = claude_models.get("opus") or claude_models.get("sonnet")
     if default_model is not None:
-        result["model"] = default_model
+        result["model"] = normalize_claude_model_name(default_model)
 
     return result
 
