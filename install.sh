@@ -13,16 +13,29 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
+# If generated file doesn't exist on disk (e.g. on a feature branch),
+# extract it from origin/main
 if [ ! -f "$GENERATED_FILE" ]; then
-  echo "Error: $GENERATED_FILE not found. Run generate.py first." >&2
-  exit 1
+  git -C "$REPO_DIR" fetch origin main --quiet 2>/dev/null || true
+  BASENAME="$(basename "$GENERATED_FILE")"
+  if git -C "$REPO_DIR" show "origin/main:$BASENAME" >/dev/null 2>&1; then
+    git -C "$REPO_DIR" show "origin/main:$BASENAME" > "$GENERATED_FILE.from-main"
+    GENERATED_FILE="$GENERATED_FILE.from-main"
+    echo "Note: using $BASENAME from origin/main (not on current branch)." >&2
+  else
+    echo "Error: $GENERATED_FILE not found and not available on origin/main." >&2
+    echo "Run generate.py first." >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$(dirname "$SETTINGS_FILE")"
 mkdir -p "$STATE_DIR"
 
-# Single atomic operation: merge settings then add hook
 python3 "$MERGE_SCRIPT" "$GENERATED_FILE" "$SETTINGS_FILE"
+
+# Clean up temp file if we extracted from origin/main
+[ "${GENERATED_FILE%.from-main}" != "$GENERATED_FILE" ] && rm -f "$GENERATED_FILE"
 python3 "$MERGE_SCRIPT" --install-hook "$UPDATE_SCRIPT" "$SETTINGS_FILE"
 
 echo "Installed. Claude Code will auto-sync settings on session start."

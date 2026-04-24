@@ -55,28 +55,31 @@ done
   echo $$ > "$LOCK_DIR/pid" 2>/dev/null
   trap 'rm -rf "$LOCK_DIR" 2>/dev/null' EXIT
 
-  OLD_HASH=""
-  [ -f "$GENERATED_FILE" ] && OLD_HASH=$(shasum "$GENERATED_FILE" 2>/dev/null | cut -d' ' -f1)
+  BASENAME="$(basename "$GENERATED_FILE")"
 
-  # Pull latest
-  if git -C "$REPO_DIR" pull --ff-only -q 2>/dev/null; then
-    # Reset failure counter on success
+  # Get current hash from origin/main (works regardless of checked-out branch)
+  OLD_HASH=$(git -C "$REPO_DIR" show "origin/main:$BASENAME" 2>/dev/null | shasum 2>/dev/null | cut -d' ' -f1)
+
+  # Fetch latest main from origin
+  if git -C "$REPO_DIR" fetch origin main --quiet 2>/dev/null; then
     rm -f "$FAIL_FILE" 2>/dev/null
   else
-    # Track consecutive failures
     FAILURES=$(cat "$FAIL_FILE" 2>/dev/null || echo 0)
     FAILURES=$(( FAILURES + 1 ))
     echo "$FAILURES" > "$FAIL_FILE" 2>/dev/null
   fi
 
-  # Record throttle timestamp regardless of outcome
   date +%s > "$THROTTLE_FILE" 2>/dev/null
 
-  NEW_HASH=""
-  [ -f "$GENERATED_FILE" ] && NEW_HASH=$(shasum "$GENERATED_FILE" 2>/dev/null | cut -d' ' -f1)
+  NEW_HASH=$(git -C "$REPO_DIR" show "origin/main:$BASENAME" 2>/dev/null | shasum 2>/dev/null | cut -d' ' -f1)
 
   if [ "$OLD_HASH" != "$NEW_HASH" ] && [ -n "$NEW_HASH" ]; then
-    python3 "$MERGE_SCRIPT" "$GENERATED_FILE" "$SETTINGS_FILE" --only-if-changed 2>/dev/null
+    # Extract the file from origin/main and merge it
+    TMPFILE="${STATE_DIR}/.claude-settings-latest.json"
+    if git -C "$REPO_DIR" show "origin/main:$BASENAME" > "$TMPFILE" 2>/dev/null; then
+      python3 "$MERGE_SCRIPT" "$TMPFILE" "$SETTINGS_FILE" --only-if-changed 2>/dev/null
+      rm -f "$TMPFILE" 2>/dev/null
+    fi
   fi
 ) &
 
