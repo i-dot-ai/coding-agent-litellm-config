@@ -46,19 +46,14 @@ cd coding-agent-litellm-config
 ./install.sh
 ```
 
-This does two things:
-1. Deep-merges `claude-settings.json` into `~/.claude/settings.json` (creating it if it doesn't exist, preserving your existing hooks, plugins, and extra env vars like API keys if it does)
-2. Registers a `SessionStart` hook so Claude Code auto-pulls updates when a new session starts (throttled to once per hour, runs in background)
+The install script will:
+1. Deep-merge `claude-settings.json` into `~/.claude/settings.json` (creating it if it doesn't exist, preserving your existing hooks, plugins, and extra env vars if it does)
+2. Prompt for your LiteLLM API key (`ANTHROPIC_AUTH_TOKEN`) and save it to settings — you can also skip and add it later
+3. Register a `SessionStart` hook so Claude Code auto-pulls updates when a new session starts (throttled to once per hour, runs in background)
 
 The install works from any branch — if `claude-settings.json` doesn't exist locally, it reads it from `origin/main`.
 
-Then set your LiteLLM API key in your shell profile (`~/.zshrc` or `~/.bash_profile`):
-
-```bash
-export ANTHROPIC_AUTH_TOKEN=sk-your-litellm-key
-```
-
-The API key is intentionally **not** included in `claude-settings.json` so it doesn't get overwritten when the config is regenerated.
+The API key is per-user and not included in the generated config, but the merge preserves it across updates.
 
 Now install and run Claude Code:
 

@@ -16,7 +16,8 @@ UNINSTALL_SCRIPT = os.path.join(REPO_DIR, "uninstall.sh")
 HOOK_MARKER = "update-claude-settings.sh"
 
 
-def run_install(settings_path: str, state_dir: str, generated_path: str) -> subprocess.CompletedProcess:
+def run_install(settings_path: str, state_dir: str, generated_path: str,
+                stdin_input: str = None) -> subprocess.CompletedProcess:
     env = {
         **os.environ,
         "SETTINGS_FILE": settings_path,
@@ -26,6 +27,7 @@ def run_install(settings_path: str, state_dir: str, generated_path: str) -> subp
     return subprocess.run(
         ["bash", INSTALL_SCRIPT],
         capture_output=True, text=True, env=env,
+        input=stdin_input,
     )
 
 
@@ -247,6 +249,58 @@ class TestUninstall(unittest.TestCase):
         result = run_uninstall(self.settings_path, bad_state_dir)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(os.path.exists(sentinel), "File outside ~/.config/ should not be deleted")
+
+
+class TestApiKeyHandling(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.settings_path = os.path.join(self.tmp, "settings.json")
+        self.state_dir = os.path.join(self.tmp, "state")
+        self.generated_path = os.path.join(self.tmp, "claude-settings.json")
+        with open(self.generated_path, "w") as f:
+            json.dump({
+                "env": {"CLAUDE_CODE_USE_BEDROCK": "1"},
+                "model": "bedrock-claude-4.7-opus",
+            }, f)
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_skips_prompt_when_key_already_present(self):
+        with open(self.settings_path, "w") as f:
+            json.dump({"env": {"ANTHROPIC_AUTH_TOKEN": "existing-key"}}, f)
+        result = run_install(self.settings_path, self.state_dir, self.generated_path)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        settings = load_settings(self.settings_path)
+        self.assertEqual(settings["env"]["ANTHROPIC_AUTH_TOKEN"], "existing-key")
+        self.assertIn("already configured", result.stdout + result.stderr)
+
+    def test_non_interactive_prints_instructions(self):
+        """When stdin is not a terminal (piped), print manual instructions."""
+        result = run_install(self.settings_path, self.state_dir, self.generated_path,
+                             stdin_input="")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        settings = load_settings(self.settings_path)
+        self.assertNotIn("ANTHROPIC_AUTH_TOKEN", settings.get("env", {}))
+        output = result.stdout + result.stderr
+        self.assertIn("ANTHROPIC_AUTH_TOKEN", output)
+
+    def test_interactive_with_key_writes_to_settings(self):
+        """When user provides a key via stdin, it's written to settings."""
+        result = run_install(self.settings_path, self.state_dir, self.generated_path,
+                             stdin_input="sk-test-key-12345\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        settings = load_settings(self.settings_path)
+        self.assertEqual(settings["env"]["ANTHROPIC_AUTH_TOKEN"], "sk-test-key-12345")
+
+    def test_interactive_empty_input_skips(self):
+        """When user presses Enter without a key, print instructions."""
+        result = run_install(self.settings_path, self.state_dir, self.generated_path,
+                             stdin_input="\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        settings = load_settings(self.settings_path)
+        self.assertNotIn("ANTHROPIC_AUTH_TOKEN", settings.get("env", {}))
 
 
 if __name__ == "__main__":

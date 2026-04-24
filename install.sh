@@ -38,6 +38,42 @@ python3 "$MERGE_SCRIPT" "$GENERATED_FILE" "$SETTINGS_FILE"
 [ "${GENERATED_FILE%.from-main}" != "$GENERATED_FILE" ] && rm -f "$GENERATED_FILE"
 python3 "$MERGE_SCRIPT" --install-hook "$UPDATE_SCRIPT" "$SETTINGS_FILE"
 
+# Check if API key is already configured
+HAS_KEY=$(python3 -c "
+import json, os, sys
+path = sys.argv[1]
+if os.path.exists(path):
+    s = json.load(open(path))
+    if s.get('env', {}).get('ANTHROPIC_AUTH_TOKEN'):
+        print('yes')
+" "$SETTINGS_FILE" 2>/dev/null)
+
+if [ "$HAS_KEY" = "yes" ]; then
+  echo "API key (ANTHROPIC_AUTH_TOKEN) is already configured."
+else
+  API_KEY=""
+  if [ -t 0 ]; then
+    printf "Enter your LiteLLM API key (ANTHROPIC_AUTH_TOKEN), or press Enter to skip: "
+    read -r API_KEY
+  else
+    read -r API_KEY 2>/dev/null || true
+  fi
+
+  if [ -n "$API_KEY" ]; then
+    TMPGEN=$(mktemp)
+    printf '{"env":{"ANTHROPIC_AUTH_TOKEN":"%s"}}' "$API_KEY" > "$TMPGEN"
+    python3 "$MERGE_SCRIPT" "$TMPGEN" "$SETTINGS_FILE"
+    rm -f "$TMPGEN"
+    echo "API key saved to $SETTINGS_FILE."
+  else
+    echo ""
+    echo "API key (ANTHROPIC_AUTH_TOKEN) not found. To add it later:"
+    echo "  Add to ~/.claude/settings.json under env:"
+    echo "    \"ANTHROPIC_AUTH_TOKEN\": \"sk-your-key\""
+  fi
+fi
+
+echo ""
 echo "Installed. Claude Code will auto-sync settings on session start."
 echo "  Hook: $UPDATE_SCRIPT"
 echo "  To uninstall: $REPO_DIR/uninstall.sh"
