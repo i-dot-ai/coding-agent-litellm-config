@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-config:
@@ -65,14 +66,30 @@ jobs:
             git reset HEAD -- opencode.json claude-settings.json
           fi
 
-      - name: Commit and push
+      - name: Create or update pull request
         if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="auto-update-configs"
+          git checkout -B "$BRANCH"
           git add opencode.json claude-settings.json
           git commit -m "Update configs from litellm config
 
           Auto-generated from core-llm-gateway/backend/config/config.yml
           with model metadata from models.dev"
-          git push
+          git push -f origin "$BRANCH"
+
+          # Create PR if one doesn't already exist
+          if ! gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "Update configs from litellm config" \
+              --body "Auto-generated from core-llm-gateway/backend/config/config.yml with model metadata from models.dev."
+          fi
+
+          gh pr merge "$BRANCH" --squash --auto --delete-branch
