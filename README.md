@@ -1,4 +1,4 @@
-# opencode-litellm-config
+# coding-agent-litellm-config
 
 Auto-generated [OpenCode](https://opencode.ai) and [Claude Code](https://docs.anthropic.com/en/docs/build-with-claude/claude-code) configuration for our [LiteLLM](https://github.com/BerriAI/litellm) proxy.
 
@@ -38,29 +38,52 @@ ln -sf $(pwd)/opencode.json ~/.config/opencode/opencode.json
 
 The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through. It auto-detects the latest opus, sonnet, and haiku models from the LiteLLM config.
 
-1. Copy the settings file:
+#### Install (works before or after installing Claude Code)
 
-   ```bash
-   cp claude-settings.json ~/.claude/settings.json
-   ```
+```bash
+git clone git@github.com:i-dot-ai/coding-agent-litellm-config.git
+cd coding-agent-litellm-config
+./install.sh
+```
 
-   Or merge it into your existing `~/.claude/settings.json` if you have other settings.
+The install script will:
+1. Deep-merge `claude-settings.json` into `~/.claude/settings.json` (creating it if it doesn't exist, preserving your existing hooks, plugins, and extra env vars if it does)
+2. Prompt for your LiteLLM API key (`ANTHROPIC_AUTH_TOKEN`) and save it to settings — you can also skip and add it later
+3. Register a `SessionStart` hook so Claude Code auto-pulls updates when a new session starts (throttled to once per hour, runs in background)
 
-2. Set your LiteLLM API key in your shell profile (`~/.zshrc` or `~/.bash_profile`):
+The install works from any branch — if `claude-settings.json` doesn't exist locally, it reads it from `origin/main`.
 
-   ```bash
-   export ANTHROPIC_AUTH_TOKEN=sk-your-litellm-key
-   ```
+The API key is per-user and not included in the generated config, but the merge preserves it across updates.
 
-   The API key is intentionally **not** included in `claude-settings.json` so it doesn't get overwritten when the config is regenerated.
+Now install and run Claude Code:
 
-3. Run Claude Code:
+```bash
+npm install -g @anthropic-ai/claude-code
+claude
+```
 
-   ```bash
-   claude
-   ```
+#### Rollback and pause
 
-   It will use the Bedrock pass-through to route requests through LiteLLM.
+A backup of your settings is saved before each auto-update to `~/.config/coding-agent-litellm-config/settings.json.backup`.
+
+To restore and pause auto-updates:
+```bash
+cp ~/.config/coding-agent-litellm-config/settings.json.backup ~/.claude/settings.json
+touch ~/.config/coding-agent-litellm-config/paused
+```
+
+To resume auto-updates:
+```bash
+rm ~/.config/coding-agent-litellm-config/paused
+```
+
+#### Uninstall
+
+```bash
+./uninstall.sh
+```
+
+Removes the auto-update hook. Your other settings (hooks, plugins, env vars) are preserved.
 
 #### What the generated settings contain
 
@@ -99,7 +122,9 @@ python generate.py \
 
 ### Automatic updates
 
-A GitHub Action runs daily and whenever the litellm config changes, regenerating both `opencode.json` and `claude-settings.json` and committing any updates.
+**Server-side:** A GitHub Action runs daily and whenever the litellm config changes, regenerating both `opencode.json` and `claude-settings.json` and committing any updates.
+
+**Client-side:** If you ran `./install.sh`, Claude Code will fetch `origin/main` on new session start (background, throttled to once/hour) and merge any changes into `~/.claude/settings.json`. This works regardless of which branch is checked out locally.
 
 To trigger from `core-llm-gateway` when the config changes, add a dispatch step to the gateway's CI:
 
@@ -109,7 +134,7 @@ To trigger from `core-llm-gateway` when the config changes, add a dispatch step 
   uses: peter-evans/repository-dispatch@v3
   with:
     token: ${{ secrets.GH_PAT }}
-    repository: i-dot-ai/opencode-litellm-config
+    repository: i-dot-ai/coding-agent-litellm-config
     event-type: litellm-config-updated
 ```
 

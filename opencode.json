@@ -8,8 +8,8 @@
         "baseURL": "https://llm-gateway.i.ai.gov.uk/v1"
       },
       "models": {
-        "locai-l1": {
-          "name": "locai-l1"
+        "locai-l1-uk": {
+          "name": "locai-l1-uk"
         },
         "o4-mini-sweden": {
           "name": "o4-mini-sweden",
@@ -136,8 +136,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-4.1": {
-          "name": "gpt-4.1",
+        "gpt-4.1-sweden": {
+          "name": "gpt-4.1-sweden",
           "modalities": {
             "input": [
               "text",
@@ -186,8 +186,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-4.1-mini": {
-          "name": "gpt-4.1-mini",
+        "gpt-4.1-mini-sweden": {
+          "name": "gpt-4.1-mini-sweden",
           "modalities": {
             "input": [
               "text",
@@ -211,8 +211,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-4.1-nano": {
-          "name": "gpt-4.1-nano",
+        "gpt-4.1-nano-sweden": {
+          "name": "gpt-4.1-nano-sweden",
           "modalities": {
             "input": [
               "text",
@@ -236,8 +236,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-5-mini": {
-          "name": "gpt-5-mini",
+        "gpt-5-mini-sweden": {
+          "name": "gpt-5-mini-sweden",
           "modalities": {
             "input": [
               "text",
@@ -261,8 +261,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-5-chat": {
-          "name": "gpt-5-chat",
+        "gpt-5-chat-sweden": {
+          "name": "gpt-5-chat-sweden",
           "modalities": {
             "input": [
               "text",
@@ -311,8 +311,8 @@
           "tool_call": false,
           "attachment": true
         },
-        "gpt-5-nano": {
-          "name": "gpt-5-nano",
+        "gpt-5-nano-sweden": {
+          "name": "gpt-5-nano-sweden",
           "modalities": {
             "input": [
               "text",
@@ -336,8 +336,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-5": {
-          "name": "gpt-5",
+        "gpt-5-sweden": {
+          "name": "gpt-5-sweden",
           "modalities": {
             "input": [
               "text",
@@ -417,8 +417,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "gpt-5.2": {
-          "name": "gpt-5.2",
+        "gpt-5.2-uk": {
+          "name": "gpt-5.2-uk",
           "modalities": {
             "input": [
               "text",
@@ -555,7 +555,7 @@
             ]
           },
           "limit": {
-            "context": 400000,
+            "context": 1050000,
             "output": 128000
           },
           "cost": {
@@ -745,8 +745,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-4.7-opus": {
-          "name": "bedrock-claude-4.7-opus",
+        "bedrock-claude-opus-4-7-eu": {
+          "name": "bedrock-claude-opus-4-7-eu",
           "modalities": {
             "input": [
               "text",
@@ -772,8 +772,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-4.6-opus": {
-          "name": "bedrock-claude-4.6-opus",
+        "bedrock-claude-opus-4-6-eu": {
+          "name": "bedrock-claude-opus-4-6-eu",
           "modalities": {
             "input": [
               "text",
@@ -799,8 +799,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-4.6-sonnet": {
-          "name": "bedrock-claude-4.6-sonnet",
+        "bedrock-claude-sonnet-4-6-eu": {
+          "name": "bedrock-claude-sonnet-4-6-eu",
           "modalities": {
             "input": [
               "text",
@@ -826,8 +826,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-4.5-opus": {
-          "name": "bedrock-claude-4.5-opus",
+        "bedrock-claude-opus-4-5-eu": {
+          "name": "bedrock-claude-opus-4-5-eu",
           "modalities": {
             "input": [
               "text",
@@ -853,8 +853,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-4.5-sonnet": {
-          "name": "bedrock-claude-4.5-sonnet",
+        "bedrock-claude-sonnet-4-5-eu": {
+          "name": "bedrock-claude-sonnet-4-5-eu",
           "modalities": {
             "input": [
               "text",
@@ -880,8 +880,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-4.5-haiku": {
-          "name": "bedrock-claude-4.5-haiku",
+        "bedrock-claude-haiku-4-5-eu": {
+          "name": "bedrock-claude-haiku-4-5-eu",
           "modalities": {
             "input": [
               "text",
@@ -907,8 +907,8 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-3-7-sonnet": {
-          "name": "bedrock-claude-3-7-sonnet",
+        "bedrock-claude-sonnet-3-7-us": {
+          "name": "bedrock-claude-sonnet-3-7-us",
           "modalities": {
             "input": [
               "text",
