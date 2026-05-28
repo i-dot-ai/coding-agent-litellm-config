@@ -29,7 +29,7 @@
           "cost": {
             "input": 1.1,
             "output": 4.4,
-            "cache_read": 0.28
+            "cache_read": 0.275
           },
           "reasoning": true,
           "temperature": false,
@@ -54,7 +54,7 @@
           "cost": {
             "input": 0.15,
             "output": 0.6,
-            "cache_read": 0.08
+            "cache_read": 0.075
           },
           "reasoning": false,
           "temperature": true,
@@ -229,7 +229,7 @@
           "cost": {
             "input": 0.1,
             "output": 0.4,
-            "cache_read": 0.03
+            "cache_read": 0.025
           },
           "reasoning": false,
           "temperature": true,
@@ -745,6 +745,33 @@
           "tool_call": true,
           "attachment": true
         },
+        "bedrock-claude-opus-4-8-eu": {
+          "name": "bedrock-claude-opus-4-8-eu",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 5,
+            "output": 25,
+            "cache_read": 0.5,
+            "cache_write": 6.25
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
         "bedrock-claude-opus-4-7-eu": {
           "name": "bedrock-claude-opus-4-7-eu",
           "modalities": {
@@ -908,31 +935,7 @@
           "attachment": true
         },
         "bedrock-claude-sonnet-3-7-us": {
-          "name": "bedrock-claude-sonnet-3-7-us",
-          "modalities": {
-            "input": [
-              "text",
-              "image",
-              "pdf"
-            ],
-            "output": [
-              "text"
-            ]
-          },
-          "limit": {
-            "context": 200000,
-            "output": 8192
-          },
-          "cost": {
-            "input": 3,
-            "output": 15,
-            "cache_read": 0.3,
-            "cache_write": 3.75
-          },
-          "reasoning": false,
-          "temperature": true,
-          "tool_call": true,
-          "attachment": true
+          "name": "bedrock-claude-sonnet-3-7-us"
         },
         "bedrock-magistral-small-uk": {
           "name": "bedrock-magistral-small-uk",
@@ -1265,8 +1268,7 @@
           "cost": {
             "input": 0.25,
             "output": 1.5,
-            "cache_read": 0.025,
-            "cache_write": 1
+            "cache_read": 0.025
           },
           "reasoning": true,
           "temperature": true,
