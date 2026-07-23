@@ -4,7 +4,7 @@
     "CLAUDE_CODE_USE_BEDROCK": "1",
     "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-opus-4-8-eu",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-4-6-eu",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-5-0-eu",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-4-5-eu"
   },
   "model": "bedrock-claude-opus-4-8-eu"
