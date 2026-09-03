@@ -1,3 +1,7 @@
+> [!CAUTION]
+> This repo has been replaced with the tooling page in the llm-gateway-console https://github.com/i-dot-ai/core-llm-gateway/pull/257
+
+
 # coding-agent-litellm-config
 
 Auto-generated [OpenCode](https://opencode.ai) and [Claude Code](https://docs.anthropic.com/en/docs/build-with-claude/claude-code) configuration for our [LiteLLM](https://github.com/BerriAI/litellm) proxy.
