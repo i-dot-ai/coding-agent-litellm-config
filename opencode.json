@@ -407,13 +407,13 @@
             ]
           },
           "limit": {
-            "context": 128000,
-            "output": 16384
+            "context": 400000,
+            "output": 128000
           },
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.175
+            "cache_read": 0.125
           },
           "reasoning": true,
           "temperature": false,
@@ -432,13 +432,13 @@
             ]
           },
           "limit": {
-            "context": 128000,
-            "output": 16384
+            "context": 400000,
+            "output": 128000
           },
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.175
+            "cache_read": 0.125
           },
           "reasoning": true,
           "temperature": false,
@@ -467,7 +467,7 @@
             "cache_read": 0.25
           },
           "reasoning": true,
-          "temperature": false,
+          "temperature": true,
           "tool_call": true,
           "attachment": true
         },
@@ -491,6 +491,87 @@
             "input": 0.75,
             "output": 4.5,
             "cache_read": 0.075
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.6-sol-sweden": {
+          "name": "gpt-5.6-sol-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 4,
+            "output": 20,
+            "cache_read": 0.5,
+            "cache_write": 6.25
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.6-luna-sweden": {
+          "name": "gpt-5.6-luna-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 0.2,
+            "output": 1.2,
+            "cache_read": 0.02,
+            "cache_write": 0.25
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gpt-5.6-terra-sweden": {
+          "name": "gpt-5.6-terra-sweden",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 2,
+            "output": 12,
+            "cache_read": 0.2,
+            "cache_write": 2.5
           },
           "reasoning": true,
           "temperature": false,
@@ -643,6 +724,33 @@
             "output": 11,
             "cache_read": 0.22,
             "cache_write": 2.75
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
+        "bedrock-claude-opus-5-eu": {
+          "name": "bedrock-claude-opus-5-eu",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1000000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 5.5,
+            "output": 27.5,
+            "cache_read": 0.55,
+            "cache_write": 6.875
           },
           "reasoning": true,
           "temperature": false,
@@ -1169,8 +1277,7 @@
           "cost": {
             "input": 0.3,
             "output": 2.5,
-            "cache_read": 0.075,
-            "cache_write": 0.383
+            "cache_read": 0.03
           },
           "reasoning": true,
           "temperature": true,
@@ -1311,6 +1418,90 @@
             "input": 1.5,
             "output": 9,
             "cache_read": 0.15
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-3.5-flash-lite-global": {
+          "name": "gemini-3.5-flash-lite-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 0.3,
+            "output": 2.5,
+            "cache_read": 0.03
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-3.6-flash-global": {
+          "name": "gemini-3.6-flash-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 0.75,
+            "output": 3.75,
+            "cache_read": 0.075
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-3.7-flash-global": {
+          "name": "gemini-3.7-flash-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 0.75,
+            "output": 3.75,
+            "cache_read": 0.075
           },
           "reasoning": true,
           "temperature": true,
