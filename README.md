@@ -1,42 +1,23 @@
 # coding-agent-litellm-config
 
-Auto-generated [OpenCode](https://opencode.ai) and [Claude Code](https://docs.anthropic.com/en/docs/build-with-claude/claude-code) configuration for our [LiteLLM](https://github.com/BerriAI/litellm) proxy.
+Auto-generated [Claude Code](https://docs.anthropic.com/en/docs/build-with-claude/claude-code) configuration for our [LiteLLM](https://github.com/BerriAI/litellm) proxy.
 
 ## Problem
 
-When using OpenCode with a LiteLLM proxy via `@ai-sdk/openai-compatible`, OpenCode cannot look up model capabilities (vision, PDF support, reasoning, costs, context limits) from [models.dev](https://models.dev) because the model names are custom aliases that don't match any known provider/model entries.
-
-This means features like image input silently fail — OpenCode strips the image before it ever reaches the proxy.
-
-Claude Code also needs configuration to route through LiteLLM's Bedrock pass-through endpoint, with the correct model names pinned.
+Claude Code needs configuration to route through LiteLLM's Bedrock pass-through endpoint, with the correct model names pinned. Model names are custom LiteLLM aliases, so which alias is "the current opus/sonnet/haiku model" has to come from somewhere - this repo reads it from the gateway's own config rather than guessing from the name.
 
 ## Solution
 
 The `generate.py` script:
-1. Reads the LiteLLM `config.yml` to get model aliases and their underlying provider models
-2. Fetches the full model metadata from models.dev
-3. Maps litellm provider prefixes (`azure/`, `bedrock/`, `vertex_ai/`) to models.dev providers
-4. Generates an `opencode.json` with full metadata (modalities, costs, limits, capabilities)
-5. Generates a `claude-settings.json` for Claude Code with Bedrock pass-through configuration
+1. Reads the LiteLLM `config.yml`
+2. Picks the one model per tier (opus/sonnet/haiku) flagged with `model_info.claude_tier` in that file
+3. Generates a `claude-settings.json` for Claude Code with Bedrock pass-through configuration
 
 ## Usage
 
-### OpenCode
-
-Copy or symlink `opencode.json` to your global opencode config:
-
-```bash
-cp opencode.json ~/.config/opencode/opencode.json
-```
-
-Or symlink it:
-```bash
-ln -sf $(pwd)/opencode.json ~/.config/opencode/opencode.json
-```
-
 ### Claude Code
 
-The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through. It auto-detects the latest opus, sonnet, and haiku models from the LiteLLM config.
+The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through, pinned to whichever models the gateway's `config.yml` has tagged with `claude_tier: opus|sonnet|haiku`.
 
 #### Install (works before or after installing Claude Code)
 
@@ -106,7 +87,7 @@ Removes the auto-update hook. Your other settings (hooks, plugins, env vars) are
 - `ANTHROPIC_BEDROCK_BASE_URL` points to LiteLLM's Bedrock pass-through endpoint
 - `ANTHROPIC_DEFAULT_*_MODEL` pins Claude Code to specific model aliases from the LiteLLM config
 
-The model names are auto-detected from the LiteLLM config by finding bedrock Claude models and picking the latest version of each tier (opus, sonnet, haiku).
+The model names come from whichever Bedrock Claude model in `config.yml` has `model_info.claude_tier` set to that tier - see the comments in `core-llm-gateway`'s `backend/config/config.yml` for how to move the tag to a newer model.
 
 ### Regenerate manually
 
@@ -116,20 +97,19 @@ pip install -r requirements.txt
 python generate.py \
   --litellm-config /path/to/core-llm-gateway/backend/config/config.yml \
   --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
-  --output opencode.json \
-  --claude-output claude-settings.json
+  --output claude-settings.json
 ```
 
 ### Automatic updates
 
-**Server-side:** A GitHub Action runs daily and whenever the litellm config changes, regenerating both `opencode.json` and `claude-settings.json` and committing any updates.
+**Server-side:** A GitHub Action runs daily and whenever the litellm config changes, regenerating `claude-settings.json` and committing any updates.
 
 **Client-side:** If you ran `./install.sh`, Claude Code will fetch `origin/main` on new session start (background, throttled to once/hour) and merge any changes into `~/.claude/settings.json`. This works regardless of which branch is checked out locally.
 
 To trigger from `core-llm-gateway` when the config changes, add a dispatch step to the gateway's CI:
 
 ```yaml
-- name: Trigger opencode config update
+- name: Trigger claude-settings config update
   if: contains(github.event.commits.*.modified, 'backend/config/config.yml')
   uses: peter-evans/repository-dispatch@v3
   with:
@@ -138,22 +118,23 @@ To trigger from `core-llm-gateway` when the config changes, add a dispatch step 
     event-type: litellm-config-updated
 ```
 
-## Provider mapping
+## OpenCode
 
-| LiteLLM prefix | models.dev provider |
-|---|---|
-| `azure/` | `azure` |
-| `bedrock/` | `amazon-bedrock` |
-| `vertex_ai/` | `google-vertex` |
-| `openai/` | `openai` |
-| `anthropic/` | `anthropic` |
-| `gemini/` | `google` |
-| `mistral/` | `mistral` |
+This repo doesn't generate config for [OpenCode](https://opencode.ai). Use the [opencode-litellm](https://github.com/yuseferi/opencode-litellm) plugin instead - it discovers the gateway's models directly from its `/v1/models` endpoint at startup, so there's no file to generate or keep in sync:
 
-## What gets mapped
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-plugin-litellm@latest"],
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://llm-gateway.i.ai.gov.uk/v1"
+      }
+    }
+  }
+}
+```
 
-For each model, the script copies from models.dev:
-- `modalities` (input: text/image/pdf/audio/video, output: text)
-- `limit` (context window, max output tokens)
-- `cost` (input/output per million tokens, cache read/write)
-- `reasoning`, `temperature`, `tool_call`, `attachment` capability flags
+See that plugin's README for full setup and authentication details.
