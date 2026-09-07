@@ -1,4 +1,4 @@
-name: Update OpenCode config
+name: Update Claude Code config
 
 on:
   # Run daily at 06:00 UTC
@@ -47,23 +47,22 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Generate opencode.json and claude-settings.json
+      - name: Generate claude-settings.json
         run: |
           python generate.py \
             --litellm-config litellm-config.yml \
             --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
-            --output opencode.json \
-            --claude-output claude-settings.json
+            --output claude-settings.json
 
       - name: Check for changes
         id: changes
         run: |
-          git add opencode.json claude-settings.json
+          git add claude-settings.json
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            git reset HEAD -- opencode.json claude-settings.json
+            git reset HEAD -- claude-settings.json
           fi
 
       - name: Create or update pull request
@@ -76,11 +75,10 @@ jobs:
 
           BRANCH="auto-update-configs"
           git checkout -B "$BRANCH"
-          git add opencode.json claude-settings.json
-          git commit -m "Update configs from litellm config
+          git add claude-settings.json
+          git commit -m "Update claude-settings.json from litellm config
 
-          Auto-generated from core-llm-gateway/backend/config/config.yml
-          with model metadata from models.dev"
+          Auto-generated from core-llm-gateway/backend/config/config.yml"
           git push -f origin "$BRANCH"
 
           # Create PR if one doesn't already exist
@@ -88,8 +86,8 @@ jobs:
             gh pr create \
               --base main \
               --head "$BRANCH" \
-              --title "Update configs from litellm config" \
-              --body "Auto-generated from core-llm-gateway/backend/config/config.yml with model metadata from models.dev."
+              --title "Update claude-settings.json from litellm config" \
+              --body "Auto-generated from core-llm-gateway/backend/config/config.yml."
           fi
 
           gh pr merge "$BRANCH" --squash --auto --delete-branch
