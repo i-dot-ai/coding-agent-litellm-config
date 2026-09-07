@@ -4,16 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Does
 
-Generates configuration files for [OpenCode](https://opencode.ai) and [Claude Code](https://docs.anthropic.com/en/docs/build-with-claude/claude-code) from a [LiteLLM](https://github.com/BerriAI/litellm) proxy config. The core problem: coding tools can't look up model capabilities (vision, costs, context limits) when model names are custom LiteLLM aliases. This script bridges that gap by fetching metadata from models.dev and mapping it to the aliases.
+Generates `claude-settings.json` for [Claude Code](https://docs.anthropic.com/en/docs/build-with-claude/claude-code) from a [LiteLLM](https://github.com/BerriAI/litellm) proxy config, so it routes through LiteLLM's Bedrock pass-through with the right opus/sonnet/haiku model aliases pinned.
+
+This repo doesn't generate config for [OpenCode](https://opencode.ai) - see the README's "OpenCode" section, which points at the [opencode-litellm](https://github.com/yuseferi/opencode-litellm) plugin instead (it discovers models live from the gateway, no generated file needed).
 
 ## Architecture
 
-**Generation** (`generate.py`) with two output paths:
+**Generation** (`generate.py`):
 
-1. **OpenCode path**: Reads LiteLLM `config.yml` → fetches models.dev metadata → maps provider prefixes to models.dev providers → writes `opencode.json` with full model capabilities
-2. **Claude Code path**: Scans LiteLLM config for bedrock Claude models → auto-detects latest opus/sonnet/haiku by version number → writes `claude-settings.json` with Bedrock pass-through env vars
-
-Provider prefix mapping (e.g. `bedrock/` → `amazon-bedrock`, `vertex_ai/` → `google-vertex`) is in `LITELLM_TO_MODELSDEV_PROVIDER`. Model lookup falls back through: direct match → strip region prefix (for bedrock `eu.`/`us.` etc.) → longest prefix match with version delimiter.
+Reads LiteLLM `config.yml` → picks the one model per tier tagged `model_info.claude_tier: opus|sonnet|haiku` → writes `claude-settings.json` with Bedrock pass-through env vars. `detect_claude_models()` does the tag lookup; it deliberately does *not* guess a model's tier from its name.
 
 **Auto-update** (client-side, Claude Code only):
 - `install.sh` — one-time setup: deep-merges `claude-settings.json` into `~/.claude/settings.json` and registers a `SessionStart` hook
@@ -27,12 +26,11 @@ Provider prefix mapping (e.g. `bedrock/` → `amazon-bedrock`, `vertex_ai/` → 
 # Install dependencies
 pip install -r requirements.txt
 
-# Generate configs (requires access to a litellm config.yml)
+# Generate claude-settings.json (requires access to a litellm config.yml)
 python generate.py \
   --litellm-config /path/to/config.yml \
   --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
-  --output opencode.json \
-  --claude-output claude-settings.json
+  --output claude-settings.json
 ```
 
 ```bash
@@ -48,4 +46,4 @@ python3 -m unittest discover -s tests
 
 ## CI
 
-GitHub Action (`.github/workflows/update-config.yml`) runs daily and on `repository_dispatch` from `core-llm-gateway`. It fetches the litellm config via GitHub App token, regenerates both JSON files, and auto-commits changes.
+GitHub Action (`.github/workflows/update-config.yml`) runs daily and on `repository_dispatch` from `core-llm-gateway`. It fetches the litellm config via GitHub App token, regenerates `claude-settings.json`, and auto-commits changes.
