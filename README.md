@@ -62,6 +62,19 @@ npm install -g @anthropic-ai/claude-code
 claude
 ```
 
+#### Keeping your API key in 1Password
+
+Rather than saving your key in plaintext, store it in 1Password and press Enter to skip the key prompt during install. Then add to your shell profile (`~/.zshrc`):
+
+```bash
+export ANTHROPIC_AUTH_TOKEN="op://<vault>/<item>/<field>"
+alias claude='op run -- claude'
+```
+
+`op run` ([1Password CLI](https://developer.1password.com/docs/cli/get-started/)) resolves the key only for the `claude` process. A key already under `env` in `~/.claude/settings.json` takes precedence, so remove it.
+
+For OpenCode, add `"apiKey": "{env:LITELLM_API_KEY}"` to the `litellm` provider's `options`, then set `LITELLM_API_KEY` and alias `opencode` the same way.
+
 #### Rollback and pause
 
 A backup of your settings is saved before each auto-update to `~/.config/coding-agent-litellm-config/settings.json.backup`.
