@@ -234,19 +234,40 @@ def generate_opencode_config(
     }
 
 
+def _version_tuple(model_name: str) -> tuple[float, ...]:
+    """
+    Extract version numbers from a model name for sorting.
+
+    e.g. "bedrock-claude-sonnet-5-5-eu" -> (5.0, 5.0)
+         "bedrock-claude-opus-4-8-eu"   -> (4.0, 8.0)
+    """
+    version_numbers = re.findall(r"(\d+(?:\.\d+)?)", model_name)
+    return tuple(float(v) for v in version_numbers) if version_numbers else (0,)
+
+
 def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]:
     """
-    Auto-detect the best opus, sonnet, and haiku models from the litellm config.
+    Auto-detect the opus, sonnet, and haiku models from the litellm config.
 
-    Looks for bedrock Claude models by matching model_name patterns.
-    For each tier (opus/sonnet/haiku), picks the model with the highest
-    version number.
+    The authoritative signal is the explicit `model_info.claude_tier` marker
+    (opus|sonnet|haiku) maintained in the upstream config. When present, the
+    tier's model is chosen from the marked candidates. When absent (older
+    configs), the tier is inferred from the model_name and the highest version
+    number wins. In both cases, if multiple candidates share a tier, the
+    highest version number is picked.
 
     Returns a dict with keys 'opus', 'sonnet', 'haiku' mapped to model_name
     strings (or None if not found).
     """
-    # Collect candidates: (model_name, version_tuple) for each tier
-    candidates: dict[str, list[tuple[str, tuple[float, ...]]]] = {
+    # Candidates from the explicit claude_tier marker (authoritative) and
+    # candidates inferred from the model name (fallback), each as
+    # (model_name, version_tuple) lists per tier.
+    tier_marked: dict[str, list[tuple[str, tuple[float, ...]]]] = {
+        "opus": [],
+        "sonnet": [],
+        "haiku": [],
+    }
+    inferred: dict[str, list[tuple[str, tuple[float, ...]]]] = {
         "opus": [],
         "sonnet": [],
         "haiku": [],
@@ -256,6 +277,7 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
         model_name = entry.get("model_name", "")
         litellm_params = entry.get("litellm_params", {})
         litellm_model = litellm_params.get("model", "")
+        model_info = entry.get("model_info", {}) or {}
 
         # Only consider bedrock Claude models
         if not litellm_model.startswith("bedrock/"):
@@ -264,35 +286,30 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
         if "anthropic" not in underlying and "claude" not in underlying:
             continue
 
-        name_lower = model_name.lower()
+        version_tuple = _version_tuple(model_name)
 
-        # Determine tier
-        tier = None
+        # Authoritative: explicit claude_tier marker from the upstream config
+        claude_tier = model_info.get("claude_tier")
+        if claude_tier in tier_marked:
+            tier_marked[claude_tier].append((model_name, version_tuple))
+
+        # Fallback: infer the tier from the model name
+        name_lower = model_name.lower()
         for t in ("opus", "sonnet", "haiku"):
             if t in name_lower:
-                tier = t
+                inferred[t].append((model_name, version_tuple))
                 break
-        if tier is None:
-            continue
 
-        # Extract version numbers from the model name for sorting
-        # e.g. "bedrock-claude-4.6-opus" -> (4, 6)
-        # e.g. "bedrock-claude-4.5-sonnet" -> (4, 5)
-        version_numbers = re.findall(r"(\d+(?:\.\d+)?)", model_name)
-        version_tuple = (
-            tuple(float(v) for v in version_numbers) if version_numbers else (0,)
-        )
-
-        candidates[tier].append((model_name, version_tuple))
-
-    # Pick the highest version for each tier
+    # For each tier, prefer explicitly-marked candidates; else fall back to
+    # name-inferred candidates. Pick the highest version among the chosen set.
     result: dict[str, Optional[str]] = {}
     for tier in ("opus", "sonnet", "haiku"):
-        if candidates[tier]:
-            # Sort by version tuple descending, pick the first
-            best = sorted(candidates[tier], key=lambda x: x[1], reverse=True)[0]
+        candidates = tier_marked[tier] or inferred[tier]
+        source = "claude_tier" if tier_marked[tier] else "inferred"
+        if candidates:
+            best = sorted(candidates, key=lambda x: x[1], reverse=True)[0]
             result[tier] = best[0]
-            print(f"  Claude Code {tier}: {best[0]}", file=sys.stderr)
+            print(f"  Claude Code {tier}: {best[0]} (via {source})", file=sys.stderr)
         else:
             result[tier] = None
             print(f"  Claude Code {tier}: not found", file=sys.stderr)
