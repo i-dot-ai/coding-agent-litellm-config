@@ -14,13 +14,18 @@ class TestGenerateClaudeSettings(unittest.TestCase):
     """Settings generation uses model names as-is from the config."""
 
     def _make_models(self, entries):
-        return [
-            {
+        models = []
+        for entry in entries:
+            name, bedrock_id = entry[0], entry[1]
+            tier = entry[2] if len(entry) > 2 else None
+            model = {
                 "model_name": name,
                 "litellm_params": {"model": f"bedrock/{bedrock_id}"},
             }
-            for name, bedrock_id in entries
-        ]
+            if tier is not None:
+                model["model_info"] = {"claude_tier": tier}
+            models.append(model)
+        return models
 
     def test_model_names_preserved_with_region(self):
         models = self._make_models([
@@ -83,6 +88,49 @@ class TestGenerateClaudeSettings(unittest.TestCase):
             litellm_models=models,
         )
         self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-3-7-us")
+
+    def test_claude_tier_marker_is_authoritative(self):
+        """An explicit claude_tier marker wins over an unmarked higher version."""
+        models = self._make_models([
+            # Higher version but NOT marked -- must be ignored for the pin.
+            ("bedrock-claude-opus-9-9-eu", "eu.anthropic.claude-opus-9-9"),
+            # Lower version but explicitly marked as the opus tier.
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5", "opus"),
+            ("bedrock-claude-sonnet-5-5-eu", "eu.anthropic.claude-sonnet-5-5", "sonnet"),
+            ("bedrock-claude-haiku-4-5-eu", "eu.anthropic.claude-haiku-4-5", "haiku"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-5-5-eu")
+        self.assertEqual(settings["model"], "bedrock-claude-opus-5-5-eu")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-5-5-eu")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"], "bedrock-claude-haiku-4-5-eu")
+
+    def test_highest_version_among_marked_candidates(self):
+        """When several models share a claude_tier, the highest version wins."""
+        models = self._make_models([
+            ("bedrock-claude-sonnet-5-eu", "eu.anthropic.claude-sonnet-5", "sonnet"),
+            ("bedrock-claude-sonnet-5-5-eu", "eu.anthropic.claude-sonnet-5-5", "sonnet"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-5-5-eu")
+
+    def test_falls_back_to_name_inference_without_markers(self):
+        """Configs without claude_tier still work via version-sorted name inference."""
+        models = self._make_models([
+            ("bedrock-claude-opus-4-5-eu", "eu.anthropic.claude-opus-4-5"),
+            ("bedrock-claude-opus-4-8-eu", "eu.anthropic.claude-opus-4-8"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-4-8-eu")
 
 
 if __name__ == "__main__":
