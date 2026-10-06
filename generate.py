@@ -245,32 +245,33 @@ def _version_tuple(model_name: str) -> tuple[float, ...]:
     return tuple(float(v) for v in version_numbers) if version_numbers else (0,)
 
 
+# Claude Code model tiers, in order of preference for the default `model`.
+# Each tier maps to an ANTHROPIC_DEFAULT_<TIER>_MODEL env var in Claude Code.
+CLAUDE_TIERS = ("fable", "opus", "sonnet", "haiku")
+
+
 def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]:
     """
-    Auto-detect the opus, sonnet, and haiku models from the litellm config.
+    Auto-detect the fable, opus, sonnet, and haiku models from the litellm config.
 
     The authoritative signal is the explicit `model_info.claude_tier` marker
-    (opus|sonnet|haiku) maintained in the upstream config. When present, the
-    tier's model is chosen from the marked candidates. When absent (older
+    (fable|opus|sonnet|haiku) maintained in the upstream config. When present,
+    the tier's model is chosen from the marked candidates. When absent (older
     configs), the tier is inferred from the model_name and the highest version
     number wins. In both cases, if multiple candidates share a tier, the
     highest version number is picked.
 
-    Returns a dict with keys 'opus', 'sonnet', 'haiku' mapped to model_name
-    strings (or None if not found).
+    Returns a dict with keys 'fable', 'opus', 'sonnet', 'haiku' mapped to
+    model_name strings (or None if not found).
     """
     # Candidates from the explicit claude_tier marker (authoritative) and
     # candidates inferred from the model name (fallback), each as
     # (model_name, version_tuple) lists per tier.
     tier_marked: dict[str, list[tuple[str, tuple[float, ...]]]] = {
-        "opus": [],
-        "sonnet": [],
-        "haiku": [],
+        t: [] for t in CLAUDE_TIERS
     }
     inferred: dict[str, list[tuple[str, tuple[float, ...]]]] = {
-        "opus": [],
-        "sonnet": [],
-        "haiku": [],
+        t: [] for t in CLAUDE_TIERS
     }
 
     for entry in litellm_models:
@@ -295,7 +296,7 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
 
         # Fallback: infer the tier from the model name
         name_lower = model_name.lower()
-        for t in ("opus", "sonnet", "haiku"):
+        for t in CLAUDE_TIERS:
             if t in name_lower:
                 inferred[t].append((model_name, version_tuple))
                 break
@@ -303,7 +304,7 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
     # For each tier, prefer explicitly-marked candidates; else fall back to
     # name-inferred candidates. Pick the highest version among the chosen set.
     result: dict[str, Optional[str]] = {}
-    for tier in ("opus", "sonnet", "haiku"):
+    for tier in CLAUDE_TIERS:
         candidates = tier_marked[tier] or inferred[tier]
         source = "claude_tier" if tier_marked[tier] else "inferred"
         if candidates:
@@ -344,21 +345,19 @@ def generate_claude_settings(
     }
 
     # Add model pinning for each tier found
-    model_env_map = {
-        "opus": "ANTHROPIC_DEFAULT_OPUS_MODEL",
-        "sonnet": "ANTHROPIC_DEFAULT_SONNET_MODEL",
-        "haiku": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
-    }
-
-    for tier, env_var in model_env_map.items():
+    for tier in CLAUDE_TIERS:
         model_name = claude_models.get(tier)
         if model_name is not None:
-            env[env_var] = model_name
+            env[f"ANTHROPIC_DEFAULT_{tier.upper()}_MODEL"] = model_name
 
     result: dict = {"env": env}
 
-    # Set the default model to the best opus, falling back to sonnet
-    default_model = claude_models.get("opus") or claude_models.get("sonnet")
+    # Set the default model to the best available tier, in preference order
+    # (fable > opus > sonnet). Haiku is never used as the default.
+    default_model = next(
+        (claude_models[t] for t in ("fable", "opus", "sonnet") if claude_models.get(t)),
+        None,
+    )
     if default_model is not None:
         result["model"] = default_model
 

@@ -132,6 +132,56 @@ class TestGenerateClaudeSettings(unittest.TestCase):
         )
         self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-4-8-eu")
 
+    def test_fable_tier_detected_and_preferred_as_default(self):
+        """A fable model is pinned via ANTHROPIC_DEFAULT_FABLE_MODEL and wins the default."""
+        models = self._make_models([
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5", "opus"),
+            ("bedrock-claude-sonnet-5-5-eu", "eu.anthropic.claude-sonnet-5-5", "sonnet"),
+            ("bedrock-claude-haiku-4-5-eu", "eu.anthropic.claude-haiku-4-5", "haiku"),
+            ("bedrock-claude-fable-5-1-global", "global.anthropic.claude-fable-5-1", "fable"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_FABLE_MODEL"], "bedrock-claude-fable-5-1-global")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-5-5-eu")
+        self.assertEqual(settings["model"], "bedrock-claude-fable-5-1-global")
+
+    def test_fable_inferred_from_name_without_marker(self):
+        models = self._make_models([
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5"),
+            ("bedrock-claude-fable-5-1-global", "global.anthropic.claude-fable-5-1"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_FABLE_MODEL"], "bedrock-claude-fable-5-1-global")
+        self.assertEqual(settings["model"], "bedrock-claude-fable-5-1-global")
+
+    def test_no_fable_env_or_default_when_absent(self):
+        """Without a fable model, nothing fable-related is emitted and opus is the default."""
+        models = self._make_models([
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5", "opus"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertNotIn("ANTHROPIC_DEFAULT_FABLE_MODEL", settings["env"])
+        self.assertEqual(settings["model"], "bedrock-claude-opus-5-5-eu")
+
+    def test_haiku_never_default(self):
+        models = self._make_models([
+            ("bedrock-claude-haiku-4-5-eu", "eu.anthropic.claude-haiku-4-5", "haiku"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertNotIn("model", settings)
+
 
 if __name__ == "__main__":
     unittest.main()
