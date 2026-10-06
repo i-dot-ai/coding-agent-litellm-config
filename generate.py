@@ -223,11 +223,18 @@ def generate_opencode_config(
 
     return {
         "$schema": "https://opencode.ai/config.json",
-        "provider": {
+        "providers": {
             provider_id: {
-                "npm": "@ai-sdk/openai-compatible",
+                # Use the official OpenCode provider package name so the generated
+                # config matches OpenCode V2 expectations.
+                "package": "@opencode/ai/providers/openai-compatible",
                 "name": provider_name,
-                "options": {"baseURL": base_url},
+                # settings.baseURL is the V2 field the provider runtime expects.
+                "settings": {"baseURL": base_url},
+                # Instruct the OpenCode client to drop non-standard OpenAI params
+                # (prevents forwarding fields such as "store" to upstream
+                # Bedrock/Anthropic endpoints that reject extra inputs).
+                "body": {"drop_params": True},
                 "models": opencode_models,
             }
         },
