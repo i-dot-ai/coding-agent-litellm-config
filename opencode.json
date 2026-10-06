@@ -1,11 +1,14 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
+  "providers": {
     "litellm": {
-      "npm": "@ai-sdk/openai-compatible",
+      "package": "@opencode/ai/providers/openai-compatible",
       "name": "LiteLLM",
-      "options": {
+      "settings": {
         "baseURL": "https://llm-gateway.i.ai.gov.uk/v1"
+      },
+      "body": {
+        "drop_params": true
       },
       "models": {
         "locai-l1-uk": {
@@ -1645,6 +1648,18 @@
           "temperature": true,
           "tool_call": true,
           "attachment": true
+        },
+        "doubleword-glm-5.3-flash-uk": {
+          "name": "doubleword-glm-5.3-flash-uk"
+        },
+        "doubleword-glm-5.3-uk": {
+          "name": "doubleword-glm-5.3-uk"
+        },
+        "doubleword-kimi-k3-uk": {
+          "name": "doubleword-kimi-k3-uk"
+        },
+        "doubleword-deepseek-v4.1-flash-uk": {
+          "name": "doubleword-deepseek-v4.1-flash-uk"
         }
       }
     }
