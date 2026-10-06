@@ -11,7 +11,7 @@ Generates configuration files for [OpenCode](https://opencode.ai) and [Claude Co
 **Generation** (`generate.py`) with two output paths:
 
 1. **OpenCode path**: Reads LiteLLM `config.yml` → fetches models.dev metadata → maps provider prefixes to models.dev providers → writes `opencode.json` with full model capabilities
-2. **Claude Code path**: Scans LiteLLM config for bedrock Claude models → auto-detects latest opus/sonnet/haiku by version number → writes `claude-settings.json` with Bedrock pass-through env vars
+2. **Claude Code path**: Scans LiteLLM config for bedrock Claude models → auto-detects latest fable/opus/sonnet/haiku by `model_info.claude_tier` marker (falling back to name inference + version number) → writes `claude-settings.json` with Bedrock pass-through env vars. Tiers are listed in `CLAUDE_TIERS`; the default `model` is the first available of fable > opus > sonnet.
 
 Provider prefix mapping (e.g. `bedrock/` → `amazon-bedrock`, `vertex_ai/` → `google-vertex`) is in `LITELLM_TO_MODELSDEV_PROVIDER`. Model lookup falls back through: direct match → strip region prefix (for bedrock `eu.`/`us.` etc.) → longest prefix match with version delimiter.
 
