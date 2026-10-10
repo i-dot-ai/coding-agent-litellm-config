@@ -6,7 +6,7 @@
     "ANTHROPIC_DEFAULT_FABLE_MODEL": "bedrock-claude-fable-5-1-global",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-opus-5-5-eu",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-5-5-eu",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-4-5-eu"
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-5-5-eu"
   },
   "model": "bedrock-claude-fable-5-1-global"
 }
