@@ -16,7 +16,12 @@ import json
 import os
 import sys
 
-KNOWN_GENERATED_KEYS = {"env", "model"}
+KNOWN_GENERATED_KEYS = {"env", "model", "modelPicker"}
+RETIRED_ENV_KEYS = (
+    "CLAUDE_CODE_USE_BEDROCK",
+    "CLAUDE_CODE_SKIP_BEDROCK_AUTH",
+    "ANTHROPIC_BEDROCK_BASE_URL",
+)
 HOOK_MARKER = "update-claude-settings.sh"
 
 
@@ -28,9 +33,15 @@ def merge(generated: dict, user: dict) -> dict:
             result["env"] = {}
         for key, value in generated["env"].items():
             result["env"][key] = value
+        for key in RETIRED_ENV_KEYS:
+            if key not in generated["env"]:
+                result["env"].pop(key, None)
 
     if "model" in generated:
         result["model"] = generated["model"]
+
+    if "modelPicker" in generated:
+        result["modelPicker"] = generated["modelPicker"]
 
     return result
 

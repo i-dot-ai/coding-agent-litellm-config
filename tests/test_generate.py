@@ -7,7 +7,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from generate import detect_claude_models, generate_claude_settings
+from generate import detect_claude_models, detect_extra_models, generate_claude_settings
 
 
 class TestGenerateClaudeSettings(unittest.TestCase):
@@ -69,7 +69,7 @@ class TestGenerateClaudeSettings(unittest.TestCase):
         )
         self.assertEqual(settings["model"], "bedrock-claude-opus-4-7-eu")
 
-    def test_bedrock_url_derived_from_base(self):
+    def test_gateway_url_derived_from_base(self):
         models = self._make_models([
             ("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7"),
         ])
@@ -77,7 +77,53 @@ class TestGenerateClaudeSettings(unittest.TestCase):
             base_url="https://llm-gateway.i.ai.gov.uk/v1",
             litellm_models=models,
         )
-        self.assertEqual(settings["env"]["ANTHROPIC_BEDROCK_BASE_URL"], "https://llm-gateway.i.ai.gov.uk/bedrock")
+        env = settings["env"]
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://llm-gateway.i.ai.gov.uk")
+
+    def test_autodiscovery_with_model_flag(self):
+        models = self._make_models([
+            ("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://llm-gateway.i.ai.gov.uk/v1",
+            litellm_models=models,
+            all_model_flag=True
+        )
+        env = settings["env"]
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://llm-gateway.i.ai.gov.uk")
+        self.assertEqual(env["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"], "1")
+
+
+
+    def test_model_picker_lists_only_explicit_third_party_models(self):
+        models = self._make_models([
+            ("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7"),
+            ("bedrock-glm-5-uk", "zai.glm-5"),
+            ("bedrock-ministral-8b-uk", "mistral.ministral-8b"),
+        ])
+        models.append({"model_name": "gpt-5.2-uk", "litellm_params": {"model": "azure/gpt-5.2"}})
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(
+            [o["model"] for o in settings["modelPicker"]["options"]],
+            ["gpt-5.2-uk", "bedrock-glm-5-uk"],
+        )
+
+    def test_model_picker_skips_missing_and_embedding_models(self):
+        models = self._make_models([("bedrock-glm-5-uk", "zai.glm-5")])
+        models[0]["model_info"] = {"mode": "embedding"}
+        extra = detect_extra_models(models, wanted=("bedrock-glm-5-uk", "not-in-config"))
+        self.assertEqual(extra, [])
+
+    def test_no_model_picker_when_nothing_listed(self):
+        models = self._make_models([("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7")])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertNotIn("modelPicker", settings)
 
     def test_us_region_model_preserved(self):
         models = self._make_models([
