@@ -51,7 +51,7 @@ jobs:
         run: |
           python generate.py \
             --litellm-config litellm-config.yml \
-            --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
+            --base-url "https://llm-gateway.i.ai.gov.uk" \
             --output opencode.json \
             --claude-output claude-settings.json
 

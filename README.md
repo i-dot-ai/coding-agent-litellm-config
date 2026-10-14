@@ -132,7 +132,7 @@ pip install -r requirements.txt
 
 python generate.py \
   --litellm-config /path/to/core-llm-gateway/backend/config/config.yml \
-  --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
+  --base-url "https://llm-gateway.i.ai.gov.uk" \
   --output opencode.json \
   --claude-output claude-settings.json
 ```

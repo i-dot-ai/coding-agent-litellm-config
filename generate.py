@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from ast import arg
 import json
 import sys
 from pathlib import Path
@@ -221,7 +222,7 @@ def generate_opencode_config(
         file=sys.stderr,
     )
 
-    return {
+    return { # NOTE - This payload should probably be a pydantic/dataclass object ideally.
         "$schema": "https://opencode.ai/config.json",
         "providers": {
             provider_id: {
@@ -255,6 +256,32 @@ def _version_tuple(model_name: str) -> tuple[float, ...]:
 # Claude Code model tiers, in order of preference for the default `model`.
 # Each tier maps to an ANTHROPIC_DEFAULT_<TIER>_MODEL env var in Claude Code.
 CLAUDE_TIERS = ("fable", "opus", "sonnet", "haiku")
+
+# Non-Claude LiteLLM model_name aliases to list in Claude Code's /model picker.
+CLAUDE_THIRD_PARTY_MODELS = ("gpt-5.2-uk", "bedrock-glm-5-uk", "bedrock-gpt-6-astra-global")
+
+
+def detect_extra_models(
+    litellm_models: list[dict],
+    wanted: tuple[str, ...] = CLAUDE_THIRD_PARTY_MODELS,
+) -> list[dict]:
+    """Build modelPicker options for the explicitly listed third-party aliases."""
+    by_name = {e.get("model_name"): e for e in litellm_models}
+    options = []
+    for name in wanted:
+        entry = by_name.get(name)
+        if entry is None:
+            print(f"  WARNING: third-party model '{name}' not in litellm config", file=sys.stderr)
+            continue
+        info = entry.get("model_info", {}) or {}
+        if info.get("mode") in EXCLUDED_MODES:
+            print(f"  WARNING: skipping non-chat model '{name}'", file=sys.stderr)
+            continue
+        option = {"model": name, "label": info.get("display_name", name)}
+        if info.get("description"):
+            option["description"] = info["description"]
+        options.append(option)
+    return options
 
 
 def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]:
@@ -329,28 +356,29 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
 def generate_claude_settings(
     base_url: str,
     litellm_models: list[dict],
+    all_model_flag: bool = False
 ) -> dict:
     """
-    Generate a claude-settings.json for Claude Code with Bedrock pass-through.
-
-    The settings configure Claude Code to route through LiteLLM's /bedrock
-    endpoint, skipping local AWS auth (LiteLLM handles it).
+    Generate a claude-settings.json for Claude Code via LiteLLM's Anthropic
+    Messages endpoint (/v1/messages), which translates requests for non-Claude
+    models. The Bedrock pass-through route does not.
 
     API key (ANTHROPIC_AUTH_TOKEN) is NOT included -- users should set it
     in their shell profile so it persists across config regenerations.
     """
-    # Derive bedrock URL from base URL: strip /v1 suffix and append /bedrock
-    bedrock_url = re.sub(r"/v1/?$", "", base_url) + "/bedrock"
+    gateway_url = re.sub(r"/v1/?$", "", base_url)
 
     print("\nDetecting Claude models for Claude Code settings...", file=sys.stderr)
     claude_models = detect_claude_models(litellm_models)
 
     env: dict[str, str] = {
-        "ANTHROPIC_BEDROCK_BASE_URL": bedrock_url,
-        "CLAUDE_CODE_USE_BEDROCK": "1",
-        "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
+        "ANTHROPIC_BASE_URL": gateway_url,
+        "CLAUDE_CODE_USE_BEDROCK": "0" # counterintuitive - we don't want bedrock mode due to litellm integration.
     }
 
+    if all_model_flag:
+        print("Warning: --claude-all-models flag is set. This will allow auto-discovery of all gateway models in litellm config, which may result in a significant amount of models without metadata.", file=sys.stderr)
+        env["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] = "1"
     # Add model pinning for each tier found
     for tier in CLAUDE_TIERS:
         model_name = claude_models.get(tier)
@@ -367,6 +395,10 @@ def generate_claude_settings(
     )
     if default_model is not None:
         result["model"] = default_model
+
+    extra = detect_extra_models(litellm_models)
+    if extra:
+        result["modelPicker"] = {"options": extra}
 
     return result
 
@@ -405,6 +437,12 @@ def main():
         default=None,
         help="Output file path for claude-settings.json (default: not generated)",
     )
+    parser.add_argument(
+        "--claude-all-models",
+        default=None,
+        action="store_true",
+        help="Experimental Flag: Allows for auto-discovery of all gateway models in litellm config. Will result in a significant amount of models without metadata. Use with caution.",
+    )
 
     args = parser.parse_args()
 
@@ -429,6 +467,7 @@ def main():
         claude_settings = generate_claude_settings(
             base_url=args.base_url,
             litellm_models=litellm_models,
+            all_model_flag=args.claude_all_models
         )
         claude_output = json.dumps(claude_settings, indent=2) + "\n"
         Path(args.claude_output).write_text(claude_output)
