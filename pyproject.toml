@@ -1,0 +1,19 @@
+[project]
+name = "coding-agent-litellm-config"
+version = "0.1.0"
+description = "Auto-generated OpenCode and Claude Code configuration for our LiteLLM proxy."
+readme = "README.md"
+authors = [
+    { name = "George Burton", email = "george.burton@dsit.gov.uk" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+coding-agent-litellm-config = "coding_agent_litellm_config:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
