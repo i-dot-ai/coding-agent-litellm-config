@@ -127,13 +127,13 @@ class TestGenerateClaudeSettings(unittest.TestCase):
 
     def test_us_region_model_preserved(self):
         models = self._make_models([
-            ("bedrock-claude-sonnet-3-7-us", "anthropic.claude-3-7-sonnet-20250219-v1:0"),
+            ("bedrock-claude-sonnet-4-6-us", "us.anthropic.claude-sonnet-4-6-20250514-v1:0"),
         ])
         settings = generate_claude_settings(
             base_url="https://example.com/v1",
             litellm_models=models,
         )
-        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-3-7-us")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-4-6-us")
 
     def test_claude_tier_marker_is_authoritative(self):
         """An explicit claude_tier marker wins over an unmarked higher version."""

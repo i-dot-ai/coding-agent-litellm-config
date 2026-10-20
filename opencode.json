@@ -1030,9 +1030,6 @@
           "tool_call": true,
           "attachment": true
         },
-        "bedrock-claude-sonnet-3-7-us": {
-          "name": "bedrock-claude-sonnet-3-7-us"
-        },
         "bedrock-magistral-small-uk": {
           "name": "bedrock-magistral-small-uk",
           "modalities": {
