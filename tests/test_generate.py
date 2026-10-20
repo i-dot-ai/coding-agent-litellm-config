@@ -7,20 +7,25 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from generate import detect_claude_models, generate_claude_settings
+from generate import detect_claude_models, detect_extra_models, generate_claude_settings
 
 
 class TestGenerateClaudeSettings(unittest.TestCase):
     """Settings generation uses model names as-is from the config."""
 
     def _make_models(self, entries):
-        return [
-            {
+        models = []
+        for entry in entries:
+            name, bedrock_id = entry[0], entry[1]
+            tier = entry[2] if len(entry) > 2 else None
+            model = {
                 "model_name": name,
                 "litellm_params": {"model": f"bedrock/{bedrock_id}"},
             }
-            for name, bedrock_id in entries
-        ]
+            if tier is not None:
+                model["model_info"] = {"claude_tier": tier}
+            models.append(model)
+        return models
 
     def test_model_names_preserved_with_region(self):
         models = self._make_models([
@@ -64,7 +69,7 @@ class TestGenerateClaudeSettings(unittest.TestCase):
         )
         self.assertEqual(settings["model"], "bedrock-claude-opus-4-7-eu")
 
-    def test_bedrock_url_derived_from_base(self):
+    def test_gateway_url_derived_from_base(self):
         models = self._make_models([
             ("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7"),
         ])
@@ -72,7 +77,53 @@ class TestGenerateClaudeSettings(unittest.TestCase):
             base_url="https://llm-gateway.i.ai.gov.uk/v1",
             litellm_models=models,
         )
-        self.assertEqual(settings["env"]["ANTHROPIC_BEDROCK_BASE_URL"], "https://llm-gateway.i.ai.gov.uk/bedrock")
+        env = settings["env"]
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://llm-gateway.i.ai.gov.uk")
+
+    def test_autodiscovery_with_model_flag(self):
+        models = self._make_models([
+            ("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://llm-gateway.i.ai.gov.uk/v1",
+            litellm_models=models,
+            all_model_flag=True
+        )
+        env = settings["env"]
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://llm-gateway.i.ai.gov.uk")
+        self.assertEqual(env["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"], "1")
+
+
+
+    def test_model_picker_lists_only_explicit_third_party_models(self):
+        models = self._make_models([
+            ("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7"),
+            ("bedrock-glm-5-uk", "zai.glm-5"),
+            ("bedrock-ministral-8b-uk", "mistral.ministral-8b"),
+        ])
+        models.append({"model_name": "gpt-5.2-uk", "litellm_params": {"model": "azure/gpt-5.2"}})
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(
+            [o["model"] for o in settings["modelPicker"]["options"]],
+            ["gpt-5.2-uk", "bedrock-glm-5-uk"],
+        )
+
+    def test_model_picker_skips_missing_and_embedding_models(self):
+        models = self._make_models([("bedrock-glm-5-uk", "zai.glm-5")])
+        models[0]["model_info"] = {"mode": "embedding"}
+        extra = detect_extra_models(models, wanted=("bedrock-glm-5-uk", "not-in-config"))
+        self.assertEqual(extra, [])
+
+    def test_no_model_picker_when_nothing_listed(self):
+        models = self._make_models([("bedrock-claude-opus-4-7-eu", "eu.anthropic.claude-opus-4-7")])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertNotIn("modelPicker", settings)
 
     def test_us_region_model_preserved(self):
         models = self._make_models([
@@ -83,6 +134,99 @@ class TestGenerateClaudeSettings(unittest.TestCase):
             litellm_models=models,
         )
         self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-4-6-us")
+
+    def test_claude_tier_marker_is_authoritative(self):
+        """An explicit claude_tier marker wins over an unmarked higher version."""
+        models = self._make_models([
+            # Higher version but NOT marked -- must be ignored for the pin.
+            ("bedrock-claude-opus-9-9-eu", "eu.anthropic.claude-opus-9-9"),
+            # Lower version but explicitly marked as the opus tier.
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5", "opus"),
+            ("bedrock-claude-sonnet-5-5-eu", "eu.anthropic.claude-sonnet-5-5", "sonnet"),
+            ("bedrock-claude-haiku-4-5-eu", "eu.anthropic.claude-haiku-4-5", "haiku"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-5-5-eu")
+        self.assertEqual(settings["model"], "bedrock-claude-opus-5-5-eu")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-5-5-eu")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"], "bedrock-claude-haiku-4-5-eu")
+
+    def test_highest_version_among_marked_candidates(self):
+        """When several models share a claude_tier, the highest version wins."""
+        models = self._make_models([
+            ("bedrock-claude-sonnet-5-eu", "eu.anthropic.claude-sonnet-5", "sonnet"),
+            ("bedrock-claude-sonnet-5-5-eu", "eu.anthropic.claude-sonnet-5-5", "sonnet"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"], "bedrock-claude-sonnet-5-5-eu")
+
+    def test_falls_back_to_name_inference_without_markers(self):
+        """Configs without claude_tier still work via version-sorted name inference."""
+        models = self._make_models([
+            ("bedrock-claude-opus-4-5-eu", "eu.anthropic.claude-opus-4-5"),
+            ("bedrock-claude-opus-4-8-eu", "eu.anthropic.claude-opus-4-8"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-4-8-eu")
+
+    def test_fable_tier_detected_and_preferred_as_default(self):
+        """A fable model is pinned via ANTHROPIC_DEFAULT_FABLE_MODEL and wins the default."""
+        models = self._make_models([
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5", "opus"),
+            ("bedrock-claude-sonnet-5-5-eu", "eu.anthropic.claude-sonnet-5-5", "sonnet"),
+            ("bedrock-claude-haiku-4-5-eu", "eu.anthropic.claude-haiku-4-5", "haiku"),
+            ("bedrock-claude-fable-5-1-global", "global.anthropic.claude-fable-5-1", "fable"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_FABLE_MODEL"], "bedrock-claude-fable-5-1-global")
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"], "bedrock-claude-opus-5-5-eu")
+        self.assertEqual(settings["model"], "bedrock-claude-fable-5-1-global")
+
+    def test_fable_inferred_from_name_without_marker(self):
+        models = self._make_models([
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5"),
+            ("bedrock-claude-fable-5-1-global", "global.anthropic.claude-fable-5-1"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertEqual(settings["env"]["ANTHROPIC_DEFAULT_FABLE_MODEL"], "bedrock-claude-fable-5-1-global")
+        self.assertEqual(settings["model"], "bedrock-claude-fable-5-1-global")
+
+    def test_no_fable_env_or_default_when_absent(self):
+        """Without a fable model, nothing fable-related is emitted and opus is the default."""
+        models = self._make_models([
+            ("bedrock-claude-opus-5-5-eu", "eu.anthropic.claude-opus-5-5", "opus"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertNotIn("ANTHROPIC_DEFAULT_FABLE_MODEL", settings["env"])
+        self.assertEqual(settings["model"], "bedrock-claude-opus-5-5-eu")
+
+    def test_haiku_never_default(self):
+        models = self._make_models([
+            ("bedrock-claude-haiku-4-5-eu", "eu.anthropic.claude-haiku-4-5", "haiku"),
+        ])
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=models,
+        )
+        self.assertNotIn("model", settings)
 
 
 if __name__ == "__main__":

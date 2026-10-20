@@ -1,11 +1,30 @@
 {
   "env": {
-    "ANTHROPIC_BEDROCK_BASE_URL": "https://llm-gateway.i.ai.gov.uk/bedrock",
-    "CLAUDE_CODE_USE_BEDROCK": "1",
-    "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-opus-4-8-eu",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-5-0-eu",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-4-5-eu"
+    "ANTHROPIC_BASE_URL": "https://llm-gateway.i.ai.gov.uk",
+    "CLAUDE_CODE_USE_BEDROCK": "0",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "bedrock-claude-fable-5-1-global",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-opus-5-5-eu",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-5-5-eu",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-5-5-eu"
   },
-  "model": "bedrock-claude-opus-4-8-eu"
+  "model": "bedrock-claude-fable-5-1-global",
+  "modelPicker": {
+    "options": [
+      {
+        "model": "gpt-5.2-uk",
+        "label": "gpt-5.2-uk",
+        "description": "Previous frontier model for professional work with configurable reasoning effort."
+      },
+      {
+        "model": "bedrock-glm-5-uk",
+        "label": "bedrock-glm-5-uk",
+        "description": "Z.AI's new-generation foundation model designed for Agentic Engineering, capable of providing reliable productivity in complex system engineering and long-range Agent tasks."
+      },
+      {
+        "model": "bedrock-gpt-6-astra-global",
+        "label": "bedrock-gpt-6-astra-global",
+        "description": "OpenAI's most capable and most aligned model to date, with state-of-the-art capabilities across computer use, coding, cybersecurity, and science. It handles the hardest end-to-end work, bringing deeper reasoning and judgment, professional-quality writing and design, and advanced computer and browser use to demanding business workflows, with a 1M token context window and prompt caching."
+      }
+    ]
+  }
 }

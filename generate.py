@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from ast import arg
 import json
 import sys
 from pathlib import Path
@@ -221,41 +222,97 @@ def generate_opencode_config(
         file=sys.stderr,
     )
 
-    return {
+    return { # NOTE - This payload should probably be a pydantic/dataclass object ideally.
         "$schema": "https://opencode.ai/config.json",
-        "provider": {
+        "providers": {
             provider_id: {
-                "npm": "@ai-sdk/openai-compatible",
+                # Use the official OpenCode provider package name so the generated
+                # config matches OpenCode V2 expectations.
+                "package": "@opencode/ai/providers/openai-compatible",
                 "name": provider_name,
-                "options": {"baseURL": base_url},
+                # settings.baseURL is the V2 field the provider runtime expects.
+                "settings": {"baseURL": base_url},
+                # Instruct the OpenCode client to drop non-standard OpenAI params
+                # (prevents forwarding fields such as "store" to upstream
+                # Bedrock/Anthropic endpoints that reject extra inputs).
+                "body": {"drop_params": True},
                 "models": opencode_models,
             }
         },
     }
 
 
+def _version_tuple(model_name: str) -> tuple[float, ...]:
+    """
+    Extract version numbers from a model name for sorting.
+
+    e.g. "bedrock-claude-sonnet-5-5-eu" -> (5.0, 5.0)
+         "bedrock-claude-opus-4-8-eu"   -> (4.0, 8.0)
+    """
+    version_numbers = re.findall(r"(\d+(?:\.\d+)?)", model_name)
+    return tuple(float(v) for v in version_numbers) if version_numbers else (0,)
+
+
+# Claude Code model tiers, in order of preference for the default `model`.
+# Each tier maps to an ANTHROPIC_DEFAULT_<TIER>_MODEL env var in Claude Code.
+CLAUDE_TIERS = ("fable", "opus", "sonnet", "haiku")
+
+# Non-Claude LiteLLM model_name aliases to list in Claude Code's /model picker.
+CLAUDE_THIRD_PARTY_MODELS = ("gpt-5.2-uk", "bedrock-glm-5-uk", "bedrock-gpt-6-astra-global")
+
+
+def detect_extra_models(
+    litellm_models: list[dict],
+    wanted: tuple[str, ...] = CLAUDE_THIRD_PARTY_MODELS,
+) -> list[dict]:
+    """Build modelPicker options for the explicitly listed third-party aliases."""
+    by_name = {e.get("model_name"): e for e in litellm_models}
+    options = []
+    for name in wanted:
+        entry = by_name.get(name)
+        if entry is None:
+            print(f"  WARNING: third-party model '{name}' not in litellm config", file=sys.stderr)
+            continue
+        info = entry.get("model_info", {}) or {}
+        if info.get("mode") in EXCLUDED_MODES:
+            print(f"  WARNING: skipping non-chat model '{name}'", file=sys.stderr)
+            continue
+        option = {"model": name, "label": info.get("display_name", name)}
+        if info.get("description"):
+            option["description"] = info["description"]
+        options.append(option)
+    return options
+
+
 def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]:
     """
-    Auto-detect the best opus, sonnet, and haiku models from the litellm config.
+    Auto-detect the fable, opus, sonnet, and haiku models from the litellm config.
 
-    Looks for bedrock Claude models by matching model_name patterns.
-    For each tier (opus/sonnet/haiku), picks the model with the highest
-    version number.
+    The authoritative signal is the explicit `model_info.claude_tier` marker
+    (fable|opus|sonnet|haiku) maintained in the upstream config. When present,
+    the tier's model is chosen from the marked candidates. When absent (older
+    configs), the tier is inferred from the model_name and the highest version
+    number wins. In both cases, if multiple candidates share a tier, the
+    highest version number is picked.
 
-    Returns a dict with keys 'opus', 'sonnet', 'haiku' mapped to model_name
-    strings (or None if not found).
+    Returns a dict with keys 'fable', 'opus', 'sonnet', 'haiku' mapped to
+    model_name strings (or None if not found).
     """
-    # Collect candidates: (model_name, version_tuple) for each tier
-    candidates: dict[str, list[tuple[str, tuple[float, ...]]]] = {
-        "opus": [],
-        "sonnet": [],
-        "haiku": [],
+    # Candidates from the explicit claude_tier marker (authoritative) and
+    # candidates inferred from the model name (fallback), each as
+    # (model_name, version_tuple) lists per tier.
+    tier_marked: dict[str, list[tuple[str, tuple[float, ...]]]] = {
+        t: [] for t in CLAUDE_TIERS
+    }
+    inferred: dict[str, list[tuple[str, tuple[float, ...]]]] = {
+        t: [] for t in CLAUDE_TIERS
     }
 
     for entry in litellm_models:
         model_name = entry.get("model_name", "")
         litellm_params = entry.get("litellm_params", {})
         litellm_model = litellm_params.get("model", "")
+        model_info = entry.get("model_info", {}) or {}
 
         # Only consider bedrock Claude models
         if not litellm_model.startswith("bedrock/"):
@@ -264,35 +321,30 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
         if "anthropic" not in underlying and "claude" not in underlying:
             continue
 
+        version_tuple = _version_tuple(model_name)
+
+        # Authoritative: explicit claude_tier marker from the upstream config
+        claude_tier = model_info.get("claude_tier")
+        if claude_tier in tier_marked:
+            tier_marked[claude_tier].append((model_name, version_tuple))
+
+        # Fallback: infer the tier from the model name
         name_lower = model_name.lower()
-
-        # Determine tier
-        tier = None
-        for t in ("opus", "sonnet", "haiku"):
+        for t in CLAUDE_TIERS:
             if t in name_lower:
-                tier = t
+                inferred[t].append((model_name, version_tuple))
                 break
-        if tier is None:
-            continue
 
-        # Extract version numbers from the model name for sorting
-        # e.g. "bedrock-claude-4.6-opus" -> (4, 6)
-        # e.g. "bedrock-claude-4.5-sonnet" -> (4, 5)
-        version_numbers = re.findall(r"(\d+(?:\.\d+)?)", model_name)
-        version_tuple = (
-            tuple(float(v) for v in version_numbers) if version_numbers else (0,)
-        )
-
-        candidates[tier].append((model_name, version_tuple))
-
-    # Pick the highest version for each tier
+    # For each tier, prefer explicitly-marked candidates; else fall back to
+    # name-inferred candidates. Pick the highest version among the chosen set.
     result: dict[str, Optional[str]] = {}
-    for tier in ("opus", "sonnet", "haiku"):
-        if candidates[tier]:
-            # Sort by version tuple descending, pick the first
-            best = sorted(candidates[tier], key=lambda x: x[1], reverse=True)[0]
+    for tier in CLAUDE_TIERS:
+        candidates = tier_marked[tier] or inferred[tier]
+        source = "claude_tier" if tier_marked[tier] else "inferred"
+        if candidates:
+            best = sorted(candidates, key=lambda x: x[1], reverse=True)[0]
             result[tier] = best[0]
-            print(f"  Claude Code {tier}: {best[0]}", file=sys.stderr)
+            print(f"  Claude Code {tier}: {best[0]} (via {source})", file=sys.stderr)
         else:
             result[tier] = None
             print(f"  Claude Code {tier}: not found", file=sys.stderr)
@@ -304,46 +356,49 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
 def generate_claude_settings(
     base_url: str,
     litellm_models: list[dict],
+    all_model_flag: bool = False
 ) -> dict:
     """
-    Generate a claude-settings.json for Claude Code with Bedrock pass-through.
-
-    The settings configure Claude Code to route through LiteLLM's /bedrock
-    endpoint, skipping local AWS auth (LiteLLM handles it).
+    Generate a claude-settings.json for Claude Code via LiteLLM's Anthropic
+    Messages endpoint (/v1/messages), which translates requests for non-Claude
+    models. The Bedrock pass-through route does not.
 
     API key (ANTHROPIC_AUTH_TOKEN) is NOT included -- users should set it
     in their shell profile so it persists across config regenerations.
     """
-    # Derive bedrock URL from base URL: strip /v1 suffix and append /bedrock
-    bedrock_url = re.sub(r"/v1/?$", "", base_url) + "/bedrock"
+    gateway_url = re.sub(r"/v1/?$", "", base_url)
 
     print("\nDetecting Claude models for Claude Code settings...", file=sys.stderr)
     claude_models = detect_claude_models(litellm_models)
 
     env: dict[str, str] = {
-        "ANTHROPIC_BEDROCK_BASE_URL": bedrock_url,
-        "CLAUDE_CODE_USE_BEDROCK": "1",
-        "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
+        "ANTHROPIC_BASE_URL": gateway_url,
+        "CLAUDE_CODE_USE_BEDROCK": "0" # counterintuitive - we don't want bedrock mode due to litellm integration.
     }
 
+    if all_model_flag:
+        print("Warning: --claude-all-models flag is set. This will allow auto-discovery of all gateway models in litellm config, which may result in a significant amount of models without metadata.", file=sys.stderr)
+        env["CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY"] = "1"
     # Add model pinning for each tier found
-    model_env_map = {
-        "opus": "ANTHROPIC_DEFAULT_OPUS_MODEL",
-        "sonnet": "ANTHROPIC_DEFAULT_SONNET_MODEL",
-        "haiku": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
-    }
-
-    for tier, env_var in model_env_map.items():
+    for tier in CLAUDE_TIERS:
         model_name = claude_models.get(tier)
         if model_name is not None:
-            env[env_var] = model_name
+            env[f"ANTHROPIC_DEFAULT_{tier.upper()}_MODEL"] = model_name
 
     result: dict = {"env": env}
 
-    # Set the default model to the best opus, falling back to sonnet
-    default_model = claude_models.get("opus") or claude_models.get("sonnet")
+    # Set the default model to the best available tier, in preference order
+    # (fable > opus > sonnet). Haiku is never used as the default.
+    default_model = next(
+        (claude_models[t] for t in ("fable", "opus", "sonnet") if claude_models.get(t)),
+        None,
+    )
     if default_model is not None:
         result["model"] = default_model
+
+    extra = detect_extra_models(litellm_models)
+    if extra:
+        result["modelPicker"] = {"options": extra}
 
     return result
 
@@ -382,6 +437,12 @@ def main():
         default=None,
         help="Output file path for claude-settings.json (default: not generated)",
     )
+    parser.add_argument(
+        "--claude-all-models",
+        default=None,
+        action="store_true",
+        help="Experimental Flag: Allows for auto-discovery of all gateway models in litellm config. Will result in a significant amount of models without metadata. Use with caution.",
+    )
 
     args = parser.parse_args()
 
@@ -406,6 +467,7 @@ def main():
         claude_settings = generate_claude_settings(
             base_url=args.base_url,
             litellm_models=litellm_models,
+            all_model_flag=args.claude_all_models
         )
         claude_output = json.dumps(claude_settings, indent=2) + "\n"
         Path(args.claude_output).write_text(claude_output)

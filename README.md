@@ -36,7 +36,7 @@ ln -sf $(pwd)/opencode.json ~/.config/opencode/opencode.json
 
 ### Claude Code
 
-The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through. It auto-detects the latest opus, sonnet, and haiku models from the LiteLLM config.
+The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through. It auto-detects the latest fable, opus, sonnet, and haiku models from the LiteLLM config.
 
 #### Install (works before or after installing Claude Code)
 
@@ -61,6 +61,19 @@ Now install and run Claude Code:
 npm install -g @anthropic-ai/claude-code
 claude
 ```
+
+#### Keeping your API key in 1Password
+
+Rather than saving your key in plaintext, store it in 1Password and press Enter to skip the key prompt during install. Copy the key's reference (right-click the field in 1Password → **Copy Secret Reference**) and add to your shell profile (`~/.zshrc`):
+
+```bash
+export ANTHROPIC_AUTH_TOKEN="op://<vault>/<item>/<field>"
+alias claude='op run -- claude'
+```
+
+Open a new terminal to pick it up. `op run` ([1Password CLI](https://developer.1password.com/docs/cli/get-started/)) resolves the key only for the `claude` process, so this works when launching from a terminal, not from IDE extensions or desktop apps. A key already under `env` in `~/.claude/settings.json` takes precedence, so remove it.
+
+For OpenCode, add `"apiKey": "{env:LITELLM_API_KEY}"` to the `litellm` provider's `options`, set `LITELLM_API_KEY` and alias `opencode` the same way, then run `opencode auth logout` to remove any stored key.
 
 #### Rollback and pause
 
@@ -89,14 +102,15 @@ Removes the auto-update hook. Your other settings (hooks, plugins, env vars) are
 
 ```json
 {
-  "model": "bedrock-claude-4.6-opus",
+  "model": "bedrock-claude-fable-5-1-global",
   "env": {
     "ANTHROPIC_BEDROCK_BASE_URL": "https://llm-gateway.i.ai.gov.uk/bedrock",
     "CLAUDE_CODE_USE_BEDROCK": "1",
     "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-4.6-opus",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-4.6-sonnet",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-4.5-haiku"
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "bedrock-claude-fable-5-1-global",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-opus-5-5-eu",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-5-5-eu",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-4-5-eu"
   }
 }
 ```
@@ -105,8 +119,11 @@ Removes the auto-update hook. Your other settings (hooks, plugins, env vars) are
 - `CLAUDE_CODE_SKIP_BEDROCK_AUTH` skips local AWS auth since LiteLLM handles authentication with AWS
 - `ANTHROPIC_BEDROCK_BASE_URL` points to LiteLLM's Bedrock pass-through endpoint
 - `ANTHROPIC_DEFAULT_*_MODEL` pins Claude Code to specific model aliases from the LiteLLM config
+- `model` is the default, chosen in preference order fable > opus > sonnet
 
-The model names are auto-detected from the LiteLLM config by finding bedrock Claude models and picking the latest version of each tier (opus, sonnet, haiku).
+The model names are auto-detected from the LiteLLM config by finding bedrock Claude models and picking the latest version of each tier (fable, opus, sonnet, haiku). A tier is only emitted if a matching model exists in the config. Where the upstream config sets `model_info.claude_tier`, that marker is authoritative; otherwise the tier is inferred from the model name.
+
+Note: selecting a model from Claude Code's built-in `/model` picker writes the raw Bedrock model ID (e.g. `eu.anthropic.claude-fable-5-1`) to your settings, which the gateway will reject. Use the LiteLLM alias instead (e.g. `/model bedrock-claude-fable-5-1-global`), or rely on the generated default.
 
 ### Regenerate manually
 
@@ -115,7 +132,7 @@ pip install -r requirements.txt
 
 python generate.py \
   --litellm-config /path/to/core-llm-gateway/backend/config/config.yml \
-  --base-url "https://llm-gateway.i.ai.gov.uk/v1" \
+  --base-url "https://llm-gateway.i.ai.gov.uk" \
   --output opencode.json \
   --claude-output claude-settings.json
 ```
