@@ -258,7 +258,7 @@ def _version_tuple(model_name: str) -> tuple[float, ...]:
 CLAUDE_TIERS = ("fable", "opus", "sonnet", "haiku")
 
 # Non-Claude LiteLLM model_name aliases to list in Claude Code's /model picker.
-CLAUDE_THIRD_PARTY_MODELS = ("gpt-5.2-uk", "bedrock-glm-5-uk", "bedrock-gpt-6-astra-global")
+CLAUDE_THIRD_PARTY_MODELS = ("gpt-5.2-uk", "bedrock-glm-5-uk", "bedrock-gpt-6-astra-global", "gemini-4-argon-global", "gemini-3.8-flash-global")
 
 
 def detect_extra_models(
