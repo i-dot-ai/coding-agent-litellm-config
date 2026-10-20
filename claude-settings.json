@@ -24,6 +24,16 @@
         "model": "bedrock-gpt-6-astra-global",
         "label": "bedrock-gpt-6-astra-global",
         "description": "OpenAI's most capable and most aligned model to date, with state-of-the-art capabilities across computer use, coding, cybersecurity, and science. It handles the hardest end-to-end work, bringing deeper reasoning and judgment, professional-quality writing and design, and advanced computer and browser use to demanding business workflows, with a 1M token context window and prompt caching."
+      },
+      {
+        "model": "gemini-4-argon-global",
+        "label": "gemini-4-argon-global",
+        "description": "Google's frontier model that excels at deep work in complex, real-world tasks across coding, finance, legal, cybersecurity, and science. Supports a 1M token context window and long decode up to 1M output tokens."
+      },
+      {
+        "model": "gemini-3.8-flash-global",
+        "label": "gemini-3.8-flash-global",
+        "description": "Our most intelligent Flash model, engineered for long-horizon software engineering, autonomous agents, and complex enterprise workflows. Delivers significant improvements over 3.7 Flash, often approaching the performance of higher-cost frontier models."
       }
     ]
   }
