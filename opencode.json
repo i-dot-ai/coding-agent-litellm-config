@@ -22,7 +22,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -47,7 +48,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -72,7 +74,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -97,7 +100,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -122,7 +126,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -147,7 +152,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -172,7 +178,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -197,7 +204,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -210,7 +218,7 @@
           "cost": {
             "input": 0.25,
             "output": 2,
-            "cache_read": 0.03
+            "cache_read": 0.025
           },
           "reasoning": true,
           "temperature": false,
@@ -222,7 +230,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -235,7 +244,7 @@
           "cost": {
             "input": 0.05,
             "output": 0.4,
-            "cache_read": 0.01
+            "cache_read": 0.005
           },
           "reasoning": true,
           "temperature": false,
@@ -247,7 +256,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -260,7 +270,7 @@
           "cost": {
             "input": 1.25,
             "output": 10,
-            "cache_read": 0.13
+            "cache_read": 0.125
           },
           "reasoning": true,
           "temperature": false,
@@ -273,12 +283,10 @@
             "input": [
               "text",
               "image",
-              "audio"
+              "pdf"
             ],
             "output": [
-              "text",
-              "image",
-              "audio"
+              "text"
             ]
           },
           "limit": {
@@ -301,12 +309,10 @@
             "input": [
               "text",
               "image",
-              "audio"
+              "pdf"
             ],
             "output": [
-              "text",
-              "image",
-              "audio"
+              "text"
             ]
           },
           "limit": {
@@ -328,7 +334,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -341,7 +348,7 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.125
+            "cache_read": 0.175
           },
           "reasoning": true,
           "temperature": false,
@@ -353,7 +360,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -366,7 +374,7 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.125
+            "cache_read": 0.175
           },
           "reasoning": true,
           "temperature": false,
@@ -378,7 +386,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -391,7 +400,7 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.125
+            "cache_read": 0.175
           },
           "reasoning": true,
           "temperature": false,
@@ -403,7 +412,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -416,7 +426,7 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.125
+            "cache_read": 0.175
           },
           "reasoning": true,
           "temperature": false,
@@ -428,7 +438,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -441,7 +452,7 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.125
+            "cache_read": 0.175
           },
           "reasoning": true,
           "temperature": false,
@@ -519,8 +530,8 @@
           "cost": {
             "input": 4,
             "output": 20,
-            "cache_read": 0.5,
-            "cache_write": 6.25
+            "cache_read": 0.4,
+            "cache_write": 5
           },
           "reasoning": true,
           "temperature": false,
@@ -586,7 +597,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -599,7 +611,7 @@
           "cost": {
             "input": 0.05,
             "output": 0.4,
-            "cache_read": 0.01
+            "cache_read": 0.005
           },
           "reasoning": true,
           "temperature": false,
@@ -611,7 +623,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -624,7 +637,7 @@
           "cost": {
             "input": 0.05,
             "output": 0.4,
-            "cache_read": 0.01
+            "cache_read": 0.005
           },
           "reasoning": true,
           "temperature": false,
@@ -636,7 +649,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -649,7 +663,7 @@
           "cost": {
             "input": 0.25,
             "output": 2,
-            "cache_read": 0.03
+            "cache_read": 0.025
           },
           "reasoning": true,
           "temperature": false,
@@ -661,7 +675,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -674,7 +689,7 @@
           "cost": {
             "input": 0.25,
             "output": 2,
-            "cache_read": 0.03
+            "cache_read": 0.025
           },
           "reasoning": true,
           "temperature": false,
@@ -686,7 +701,8 @@
           "modalities": {
             "input": [
               "text",
-              "image"
+              "image",
+              "pdf"
             ],
             "output": [
               "text"
@@ -699,7 +715,7 @@
           "cost": {
             "input": 1.75,
             "output": 14,
-            "cache_read": 0.125
+            "cache_read": 0.175
           },
           "reasoning": true,
           "temperature": false,
@@ -1029,9 +1045,6 @@
           "temperature": true,
           "tool_call": true,
           "attachment": true
-        },
-        "bedrock-claude-sonnet-3-7-us": {
-          "name": "bedrock-claude-sonnet-3-7-us"
         },
         "bedrock-magistral-small-uk": {
           "name": "bedrock-magistral-small-uk",
@@ -1365,6 +1378,32 @@
           "tool_call": true,
           "attachment": true
         },
+        "bedrock-gpt-6.1-sol-global": {
+          "name": "bedrock-gpt-6.1-sol-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1050000,
+            "output": 128000
+          },
+          "cost": {
+            "input": 2,
+            "output": 10,
+            "cache_read": 0.1,
+            "cache_write": 2.5
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
         "titan-embed-v2": {
           "name": "titan-embed-v2"
         },
@@ -1620,6 +1659,62 @@
           "tool_call": true,
           "attachment": true
         },
+        "gemini-3.8-flash-global": {
+          "name": "gemini-3.8-flash-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 0.75,
+            "output": 3.75,
+            "cache_read": 0.075
+          },
+          "reasoning": true,
+          "temperature": true,
+          "tool_call": true,
+          "attachment": true
+        },
+        "gemini-4-argon-global": {
+          "name": "gemini-4-argon-global",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "video",
+              "audio",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 1048576,
+            "output": 65536
+          },
+          "cost": {
+            "input": 2,
+            "output": 10,
+            "cache_read": 0.1
+          },
+          "reasoning": true,
+          "temperature": false,
+          "tool_call": true,
+          "attachment": true
+        },
         "gemini-3-flash-preview-global-extract": {
           "name": "gemini-3-flash-preview-global-extract",
           "modalities": {
@@ -1687,6 +1782,9 @@
         },
         "doubleword-deepseek-v4.1-flash-uk": {
           "name": "doubleword-deepseek-v4.1-flash-uk"
+        },
+        "doubleword-muse-spark-open-uk": {
+          "name": "doubleword-muse-spark-open-uk"
         }
       }
     }
