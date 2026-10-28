@@ -38,7 +38,7 @@ ln -sf $(pwd)/opencode.json ~/.config/opencode/opencode.json
 
 The generated `claude-settings.json` configures Claude Code to use LiteLLM's Bedrock pass-through. It auto-detects the latest fable, opus, sonnet, and haiku models from the LiteLLM config.
 
-#### Install (works before or after installing Claude Code)
+#### Settings installation (works before or after installing Claude Code)
 
 ```bash
 git clone git@github.com:i-dot-ai/coding-agent-litellm-config.git
@@ -48,18 +48,57 @@ cd coding-agent-litellm-config
 
 The install script will:
 1. Deep-merge `claude-settings.json` into `~/.claude/settings.json` (creating it if it doesn't exist, preserving your existing hooks, plugins, and extra env vars if it does)
-2. Prompt for your LiteLLM API key (`ANTHROPIC_AUTH_TOKEN`) and save it to settings — you can also skip and add it later
+2. Prompt for your LiteLLM API key (`ANTHROPIC_AUTH_TOKEN`) and save it to settings — skip this if you are using Docker Sandboxes or will keep your key in 1Password
 3. Register a `SessionStart` hook so Claude Code auto-pulls updates when a new session starts (throttled to once per hour, runs in background)
 
 The install works from any branch — if `claude-settings.json` doesn't exist locally, it reads it from `origin/main`.
 
 The API key is per-user and not included in the generated config, but the merge preserves it across updates.
 
+#### Installing Claude without a sandbox
+
 Now install and run Claude Code:
 
 ```bash
 npm install -g @anthropic-ai/claude-code
 claude
+```
+
+#### Running Claude with Docker Sandboxes
+
+Docker Sandboxes isolate your agent and the Claude Code harness from your machine and any secrets it contains.
+
+First [install sbx](https://docs.docker.com/ai/sandboxes/install/) (for example, using Homebrew if you're on MacOS).
+
+Then, set your API key into a custom secret (do not use the built-in `anthropic` secret type) – paste in your key when prompted for a secret value:
+
+```
+sbx secret set-custom --host llm-gateway.i.ai.gov.uk --env ANTHROPIC_AUTH_TOKEN
+```
+
+> [!TIP]
+> To update your secret, you’ll need to delete the existing value with:
+> ```
+> sbx secret rm --placeholder '<placeholder-value-from-error-message>'
+> ```
+
+Now, for every directory in which you want to run Claude, link your settings file:
+
+```
+cd <your-project-directory>
+mkdir -p .claude
+ln ~/.claude/settings.json .claude/settings.local.json
+```
+
+> [!NOTE]
+> If you want to customise Claude settings for a particular project directory, you’ll need to copy the `settings.json` file instead of using `ln`.
+> You'll have to merge in changes to your `settings.local.json` file manually, as Docker Sandboxes can’t see your global `settings.json` file.
+
+With Docker Sandboxes, you'll need to occasionally run the following command to update your list of available models, as the auto-updates won't work:
+
+```
+cd <path-to-coding-agent-litellm-config>
+./update-claude-settings.sh
 ```
 
 #### Keeping your API key in 1Password
