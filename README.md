@@ -76,6 +76,12 @@ Then, set your API key into a custom secret (do not use the built-in `anthropic`
 sbx secret set-custom --host llm-gateway.i.ai.gov.uk --env ANTHROPIC_AUTH_TOKEN
 ```
 
+> [!TIP]
+> To update your secret, you’ll need to delete the existing value with:
+> ```
+> sbx secret rm --placeholder '<placeholder-value-from-error-message>'
+> ```
+
 Now, for every directory in which you want to run Claude, link your settings file:
 
 ```
