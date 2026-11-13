@@ -356,7 +356,8 @@ def detect_claude_models(litellm_models: list[dict]) -> dict[str, Optional[str]]
 def generate_claude_settings(
     base_url: str,
     litellm_models: list[dict],
-    all_model_flag: bool = False
+    all_model_flag: bool = False,
+    mcp_servers: Optional[dict] = None,
 ) -> dict:
     """
     Generate a claude-settings.json for Claude Code via LiteLLM's Anthropic
@@ -399,6 +400,19 @@ def generate_claude_settings(
     extra = detect_extra_models(litellm_models)
     if extra:
         result["modelPicker"] = {"options": extra}
+
+    if mcp_servers:
+        result["mcpServers"] = {
+            name: {
+                "type": "http",
+                "url": f"{gateway_url}/mcp",
+                "headers": {
+                    "x-litellm-api-key": "Bearer ${ANTHROPIC_AUTH_TOKEN}",
+                    "x-mcp-servers": name,
+                },
+            }
+            for name in mcp_servers
+        }
 
     return result
 
@@ -463,11 +477,13 @@ def main():
 
     # Generate Claude Code settings if requested
     if args.claude_output:
-        litellm_models = parse_litellm_config(args.litellm_config)
+        with open(args.litellm_config) as f:
+            litellm_config = yaml.safe_load(f)
         claude_settings = generate_claude_settings(
             base_url=args.base_url,
-            litellm_models=litellm_models,
-            all_model_flag=args.claude_all_models
+            litellm_models=litellm_config.get("model_list", []),
+            all_model_flag=args.claude_all_models,
+            mcp_servers=litellm_config.get("mcp_servers"),
         )
         claude_output = json.dumps(claude_settings, indent=2) + "\n"
         Path(args.claude_output).write_text(claude_output)
