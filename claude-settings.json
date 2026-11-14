@@ -2,12 +2,12 @@
   "env": {
     "ANTHROPIC_BASE_URL": "https://llm-gateway.i.ai.gov.uk",
     "CLAUDE_CODE_USE_BEDROCK": "0",
-    "ANTHROPIC_DEFAULT_FABLE_MODEL": "bedrock-claude-fable-5-1-global",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "bedrock-claude-fable-5-2-global",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "bedrock-claude-opus-5-5-eu",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "bedrock-claude-sonnet-5-5-eu",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "bedrock-claude-haiku-5-5-eu"
   },
-  "model": "bedrock-claude-fable-5-1-global",
+  "model": "bedrock-claude-fable-5-2-global",
   "modelPicker": {
     "options": [
       {
