@@ -228,6 +228,27 @@ class TestGenerateClaudeSettings(unittest.TestCase):
         )
         self.assertNotIn("model", settings)
 
+    def test_mcp_servers_public_direct_and_gateway_with_key(self):
+        settings = generate_claude_settings(
+            base_url="https://example.com/v1",
+            litellm_models=[],
+            mcp_servers={
+                "deepwiki_v1": {"url": "https://mcp.deepwiki.com/mcp", "transport": "http", "auth_type": "none"},
+                "private": {"url": "https://private.example/mcp", "transport": "http", "auth_type": "bearer_token"},
+            },
+        )
+        self.assertEqual(settings["mcpServers"], {
+            "i.ai-core-mcp-registry": {
+                "type": "http",
+                "url": "https://example.com/mcp",
+                "headers": {"x-litellm-api-key": "Bearer ${ANTHROPIC_AUTH_TOKEN}"},
+            },
+        })
+
+    def test_no_mcp_servers_key_when_absent(self):
+        settings = generate_claude_settings(base_url="https://example.com/v1", litellm_models=[])
+        self.assertNotIn("mcpServers", settings)
+
 
 if __name__ == "__main__":
     unittest.main()

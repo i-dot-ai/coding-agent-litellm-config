@@ -51,6 +51,8 @@ The install script will:
 2. Prompt for your LiteLLM API key (`ANTHROPIC_AUTH_TOKEN`) and save it to settings — you can also skip and add it later
 3. Register a `SessionStart` hook so Claude Code auto-pulls updates when a new session starts (throttled to once per hour, runs in background)
 
+The MCP Registry will be located under your mcp tools as `i.ai-core-mcp-registry`. During first time set-up, you'll have to run the `reconnect` option in your harness to perform initial connection. 
+
 The install works from any branch — if `claude-settings.json` doesn't exist locally, it reads it from `origin/main`.
 
 The API key is per-user and not included in the generated config, but the merge preserves it across updates.

@@ -402,17 +402,13 @@ def generate_claude_settings(
         result["modelPicker"] = {"options": extra}
 
     if mcp_servers:
-        result["mcpServers"] = {
-            name: {
-                "type": "http",
-                "url": f"{gateway_url}/mcp",
-                "headers": {
-                    "x-litellm-api-key": "Bearer ${ANTHROPIC_AUTH_TOKEN}",
-                    "x-mcp-servers": name,
-                },
-            }
-            for name in mcp_servers
+        servers = {}
+        servers["i.ai-core-mcp-registry"] = {
+            "type": "http",
+            "url": f"{gateway_url}/mcp",
+            "headers": {"x-litellm-api-key": "Bearer ${ANTHROPIC_AUTH_TOKEN}"},
         }
+        result["mcpServers"] = servers
 
     return result
 

@@ -14,7 +14,8 @@ from typing import Optional, List
 MERGE_SCRIPT = os.path.join(os.path.dirname(__file__), "..", "merge-settings.py")
 
 
-def run_merge(generated: dict, user: Optional[dict] = None, extra_args: Optional[List[str]] = None) -> subprocess.CompletedProcess:
+def run_merge(generated: dict, user: Optional[dict] = None, extra_args: Optional[List[str]] = None,
+              claude_json: Optional[dict] = None) -> subprocess.CompletedProcess:
     """Helper: write generated/user JSON to temp files and run merge-settings.py."""
     with tempfile.TemporaryDirectory() as tmp:
         gen_path = os.path.join(tmp, "generated.json")
@@ -27,8 +28,19 @@ def run_merge(generated: dict, user: Optional[dict] = None, extra_args: Optional
             with open(user_path, "w") as f:
                 json.dump(user, f)
 
+        claude_json_path = os.path.join(tmp, "claude.json")
+        if claude_json is not None:
+            with open(claude_json_path, "w") as f:
+                json.dump(claude_json, f)
+
         cmd = [sys.executable, MERGE_SCRIPT, gen_path, user_path] + (extra_args or [])
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True,
+                                env={**os.environ, "CLAUDE_JSON_FILE": claude_json_path})
+
+        result.claude_json = None
+        if os.path.exists(claude_json_path):
+            with open(claude_json_path) as f:
+                result.claude_json = json.load(f)
 
         merged = None
         if os.path.exists(user_path) and result.returncode == 0 and "--dry-run" not in (extra_args or []):
@@ -448,6 +460,51 @@ class TestHookManagement(unittest.TestCase):
             cmd = [sys.executable, MERGE_SCRIPT, "--remove-hook", settings_path]
             result = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0)
+
+
+def _gateway_server(name):
+    return {
+        "type": "http",
+        "url": "https://gw.example.com/mcp",
+        "headers": {"x-litellm-api-key": "Bearer ${ANTHROPIC_AUTH_TOKEN}", "x-mcp-servers": name},
+    }
+
+
+class TestMcpServers(unittest.TestCase):
+    direct = {"type": "http", "url": "https://mcp.deepwiki.com/mcp"}
+    generated = {
+        "env": {"ANTHROPIC_BASE_URL": "https://gw.example.com"},
+        "mcpServers": {"deepwiki_v1": direct, "llm_gateway": _gateway_server("llm_gateway")},
+    }
+
+    def test_token_goes_to_gateway_entry_only(self):
+        result = run_merge(
+            self.generated,
+            user={"env": {"ANTHROPIC_AUTH_TOKEN": "sk-123"}},
+            claude_json={"mcpServers": {"deepwiki_v1": _gateway_server("deepwiki_v1")}},
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        servers = result.claude_json["mcpServers"]
+        self.assertEqual(servers["i.ai-core-mcp-registry"]["headers"]["x-litellm-api-key"], "Bearer sk-123")
+        self.assertNotIn("mcpServers", result.merged)
+
+    def test_keeps_user_servers_and_drops_stale_gateway_servers(self):
+        existing = {
+            "mcpServers": {
+                "mine": {"type": "stdio", "command": "npx", "args": ["x"]},
+                "old_gw": _gateway_server("old_gw"),
+            },
+            "projects": {"/x": {"allowedTools": []}},
+        }
+        result = run_merge(self.generated, user={}, claude_json=existing)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(set(result.claude_json["mcpServers"]), {"mine", "deepwiki_v1", "llm_gateway"})
+        self.assertEqual(result.claude_json["projects"], existing["projects"])
+
+    def test_no_claude_json_written_without_mcp_servers(self):
+        result = run_merge({"env": {"X": "1"}}, user={})
+        self.assertEqual(result.returncode, 0)
+        self.assertIsNone(result.claude_json)
 
 
 if __name__ == "__main__":
