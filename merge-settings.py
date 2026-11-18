@@ -3,6 +3,8 @@
 
 Deep-merges env vars (preserving user's extra keys) and overwrites model.
 All other user settings (hooks, plugins, etc.) are preserved untouched.
+Generated mcpServers go to ~/.claude.json (CLAUDE_JSON_FILE overrides), replacing
+only entries that point at the gateway and keeping the user's own servers.
 
 Usage:
   python3 merge-settings.py <generated-file> <user-settings-file> [--dry-run] [--only-if-changed]
@@ -16,7 +18,7 @@ import json
 import os
 import sys
 
-KNOWN_GENERATED_KEYS = {"env", "model", "modelPicker"}
+KNOWN_GENERATED_KEYS = {"env", "model", "modelPicker", "mcpServers"}
 RETIRED_ENV_KEYS = (
     "CLAUDE_CODE_USE_BEDROCK",
     "CLAUDE_CODE_SKIP_BEDROCK_AUTH",
@@ -43,6 +45,30 @@ def merge(generated: dict, user: dict) -> dict:
     if "modelPicker" in generated:
         result["modelPicker"] = generated["modelPicker"]
 
+    return result
+
+
+def merge_mcp(generated: dict, user: dict, claude_json: dict) -> dict:
+    """Replace gateway MCP entries in ~/.claude.json with the generated ones."""
+    result = copy.deepcopy(claude_json)
+    gateway_mcp_url = generated.get("env", {}).get("ANTHROPIC_BASE_URL", "").rstrip("/") + "/mcp"
+    token = user.get("env", {}).get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
+
+    # shortcut: a direct (non-gateway) server removed from the LiteLLM config stays in
+    # ~/.claude.json; record generated names in the state dir once servers get retired.
+    servers = {
+        name: server for name, server in result.get("mcpServers", {}).items()
+        if not server.get("url", "").startswith(gateway_mcp_url)
+    }
+    for name, server in generated["mcpServers"].items():
+        server = copy.deepcopy(server)
+        # Claude Code blanks ${ANTHROPIC_AUTH_TOKEN} in MCP headers, so write the real value.
+        if token and "headers" in server:
+            server["headers"] = {
+                k: v.replace("${ANTHROPIC_AUTH_TOKEN}", token) for k, v in server["headers"].items()
+            }
+        servers[name] = server
+    result["mcpServers"] = servers
     return result
 
 
@@ -151,12 +177,15 @@ def main():
         print(output, end="")
         return
 
-    if only_if_changed and os.path.exists(user_path):
-        with open(user_path) as f:
-            if f.read() == output:
-                return
+    if not (only_if_changed and os.path.exists(user_path) and open(user_path).read() == output):
+        atomic_write(user_path, output)
 
-    atomic_write(user_path, output)
+    if "mcpServers" in generated:
+        claude_json_path = os.environ.get("CLAUDE_JSON_FILE", os.path.expanduser("~/.claude.json")) # Goes past ~/.claude/settings.json, which is for user settings only.
+        claude_json = load_settings(claude_json_path)
+        merged_mcp = merge_mcp(generated, merged, claude_json)
+        if merged_mcp != claude_json:  # ~/.claude.json holds runtime state; only touch it when needed            
+            atomic_write(claude_json_path, json.dumps(merged_mcp, indent=2) + "\n")
 
 
 if __name__ == "__main__":

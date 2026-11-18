@@ -19,7 +19,7 @@ Provider prefix mapping (e.g. `bedrock/` → `amazon-bedrock`, `vertex_ai/` → 
 - `install.sh` — one-time setup: deep-merges `claude-settings.json` into `~/.claude/settings.json` and registers a `SessionStart` hook
 - `update-claude-settings.sh` — hook target: background `git pull` + conditional merge (throttled to 1/hour)
 - `uninstall.sh` — removes the hook and state
-- `merge-settings.py` — shared merge logic: updates `env` keys and `model` from generated file while preserving user's hooks, plugins, and extra env vars
+- `merge-settings.py` — shared merge logic: updates `env` keys and `model` from generated file while preserving user's hooks, plugins, and extra env vars. 
 
 ## Commands
 
